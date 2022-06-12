@@ -41,8 +41,7 @@ class mainwindow(QWidget):
         # Refresh button 
         # (refresh when images have been added or removed)
         refresh_btn = QPushButton('Refresh', self)
-        refresh_btn.clicked.connect(self.refresh)
-        refresh_btn.clicked.connect(self.filllayout)
+        refresh_btn.clicked.connect(self.refreshlayout)
         vbox_search.addWidget(refresh_btn)
 
         # List of tags
@@ -92,20 +91,41 @@ class mainwindow(QWidget):
         hbox_main.addLayout(vbox_imglist, Qt.AlignRight)
         self.setLayout(hbox_main)
 
+    def additem(self, img):
+        img_icon = QIcon()
+        item = QListWidgetItem()
+        # Initalize tag array attached to item
+        item.setData(Qt.UserRole, [])
+        # Set image and image name to item
+        img_icon.addPixmap(QPixmap(img))
+        item.setIcon(img_icon)
+        item.setText(img.rsplit('/', 1)[1])
+        # Push item to list
+        self.list_images.addItem(item)
+
     def filllayout(self):
         self.list_images.clear()
 
         for img in self.imgs:
-            img_icon = QIcon()
-            item = QListWidgetItem()
-            # Initalize tag array attached to item
-            item.setData(Qt.UserRole, [])
-            # Set image and image name to item
-            img_icon.addPixmap(QPixmap(img))
-            item.setIcon(img_icon)
-            item.setText(img.rsplit('/', 1)[1])
-            # Push item to list
-            self.list_images.addItem(item)
+            self.additem(img)
+
+    def refreshlayout(self):
+        self.refresh()
+        # Get all images filename from items
+        items = [self.list_images.item(i).text() for i in range(self.list_images.count())]
+        imgs = [self.imgs[i].rsplit('/', 1)[1] for i in range(len(self.imgs))]
+        # Get images removed from directory
+        items_to_remove = list(set(items) - set(imgs))
+        for item in items_to_remove:
+            for i in range(self.list_images.count()):
+                if self.list_images.item(i).text() == item:
+                    self.list_images.takeItem(i)
+                    break
+        
+        # Get images added to directory
+        items_to_add = list(set(imgs) - set(items))
+        for item in items_to_add:
+            self.additem(self.path+'/'+item)
 
     def refresh(self):
         self.imgs = []
@@ -116,24 +136,22 @@ class mainwindow(QWidget):
             self.imgs.append(os.path.join(self.path, f))
 
     def searchbytag(self):
-        search_tag = self.search_entry.text()
-        print(search_tag)
-        # If user pushed the button without a tag,
+        search_tags = self.search_entry.text().split(',')
+
+        print(search_tags)
+        # If user pushed the button without a tag (['']),
         # simply display the whole list
-        if not search_tag:
-            self.filllayout()
+        if len(search_tags) == 1 and '' in search_tags:
+            for i in range(self.list_images.count()):
+                if self.list_images.item(i).isHidden():
+                    self.list_images.item(i).setHidden(False)
         else:
-            # Loop through the image items
-            # and remove them from the list
-            # if it doesnt contain the tag
-            for item_index in range(self.list_images.count()):
-                item = self.list_images.item(item_index)
-                if item != None:
-                    item_data = item.data(Qt.UserRole)
-                    print(item_data)
-                    print(' '+str(item_index))
-                    if item_data != None and search_tag not in item_data:
-                        self.list_images.takeItem(item_index)
+            # Hide widgets who dont contain the tag(s)
+            for i in range(self.list_images.count()):
+                if set(search_tags).issubset(set(self.list_images.item(i).data(Qt.UserRole))):
+                    self.list_images.item(i).setHidden(False)
+                else:
+                    self.list_images.item(i).setHidden(True)
 
     def tagcontextmenu(self, event):
         self.selected_item = self.list_images.itemAt(event)
