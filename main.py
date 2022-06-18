@@ -20,7 +20,7 @@ class mainwindow(QWidget):
         self.path = "/tmp/samples"
         self.valid_images = [".jpg", ".gif", ".png"]
         self.selected_item = None
-        self.refresh()
+        self.list_global_tags = None
         print(self.imgs)
 
         hbox_main = QHBoxLayout()
@@ -44,19 +44,22 @@ class mainwindow(QWidget):
         refresh_btn.clicked.connect(self.refreshlayout)
         vbox_search.addWidget(refresh_btn)
 
-        # List of tags
+        # Global list of tags
         tag_label = QLabel(self)
         tag_label.setText('List of tags')
         tag_label.setAlignment(Qt.AlignCenter)
-        self.list_tags = QListWidget(self)
+        self.list_global_tags = QListWidget(self)
         vbox_search.addWidget(tag_label)
-        vbox_search.addWidget(self.list_tags)
+        vbox_search.addWidget(self.list_global_tags)
 
-        # List images
+        # Load initial list of images
         self.list_images = QListWidget(self)
         self.list_images.setViewMode(QListView.ListMode)
         self.list_images.setIconSize(QSize(120,120))
-        self.filllayout()
+        self.refresh()
+        self.list_images.clear()
+        for img in self.imgs:
+            self.additem(img)
         # Tag context window when clicking on an image item
         self.list_images.setContextMenuPolicy(Qt.CustomContextMenu)
         self.list_images.customContextMenuRequested.connect(self.tagcontextmenu)
@@ -102,12 +105,6 @@ class mainwindow(QWidget):
         item.setText(img.rsplit('/', 1)[1])
         # Push item to list
         self.list_images.addItem(item)
-
-    def filllayout(self):
-        self.list_images.clear()
-
-        for img in self.imgs:
-            self.additem(img)
 
     def refreshlayout(self):
         self.refresh()
@@ -159,12 +156,12 @@ class mainwindow(QWidget):
 
     def addtag(self):
         if self.selected_item != None:
-            self.popup = tagpopup(self.selected_item, tagpopupenum.ADD)
+            self.popup = tagpopup(self.selected_item, tagpopupenum.ADD, self.list_global_tags, self.list_images)
             self.popup.show()
 
     def deletetag(self):
         if self.selected_item != None:
-            self.popup = tagpopup(self.selected_item, tagpopupenum.DELETE)
+            self.popup = tagpopup(self.selected_item, tagpopupenum.DELETE, self.list_global_tags, self.list_images)
             self.popup.show()
 
     def showtag(self):
@@ -190,9 +187,11 @@ class imagepopup(QWidget):
 
 # Right click menu
 class tagpopup(QWidget):
-    def __init__(self, item, tag_popup_enum):
+    def __init__(self, item, tag_popup_enum, tags_global_list=[], list_images=[]):
         super().__init__()
         self.item = item
+        self.tags_global_list = tags_global_list
+        self.list_images = list_images
         self.tag_array = item.data(Qt.UserRole)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -227,17 +226,45 @@ class tagpopup(QWidget):
 
     def addtag(self):
         added_tags = self.tag_entry.text().split(',')
+        item_tag_array = self.item.data(Qt.UserRole)
         for tag in added_tags:
-            print("tagpopupenum ADD "+tag)
-            self.tag_array.append(tag.lstrip())
+            tag = tag.lstrip()
+            if tag not in item_tag_array:
+                print("tagpopupenum ADD "+tag)
+                self.tag_array.append(tag)
+            # Update list of all existing tags
+            if len(self.tags_global_list.findItems(tag, Qt.MatchExactly)) == 0:
+                self.tags_global_list.addItem(tag)
+
         self.item.setData(Qt.UserRole, self.tag_array)
         self.close()
 
     def deltag(self):
         deleted_tags = self.tag_entry.text().split(',')
+        selected_item_row = self.list_images.row(self.item)
         for tag in deleted_tags:
+            tag = tag.lstrip()
             print("tagpopupenum DEL "+tag)
             self.tag_array = list(filter(lambda elem: elem != tag, self.tag_array))
+        
+            # Update list of all existing tags
+            # if none of the other images have the tag
+            tag_removed = True
+
+            for i in range(self.list_images.count()):
+                item_tags = self.list_images.item(i).data(Qt.UserRole)
+
+                if selected_item_row != i and tag in item_tags:
+                    tag_removed = False
+                    break
+
+            if tag_removed:
+                items_global_list = self.tags_global_list.findItems(tag, Qt.MatchExactly)
+                if len(items_global_list) > 0:
+                    # It should contain only one item
+                    for item_list in items_global_list:
+                        self.tags_global_list.takeItem(self.tags_global_list.row(item_list))
+
         self.item.setData(Qt.UserRole, self.tag_array)
         self.close()
 
