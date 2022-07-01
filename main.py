@@ -137,6 +137,7 @@ class mainwindow(QWidget):
 
     def searchbytag(self):
         search_tags = self.search_entry.text().split(',')
+        search_tags = list(map(str.lstrip, search_tags))
 
         print(search_tags)
         # If user pushed the button without a tag (['']),
