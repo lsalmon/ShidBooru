@@ -1,4 +1,4 @@
-import sys
+import sys, argparse, pathlib
 import os
 import os.path
 from enum import Enum
@@ -15,13 +15,16 @@ class tagpopupenum(Enum):
 class mainwindow(QWidget):
     def __init__(self, parent=None):
         super(mainwindow, self).__init__(parent)
+        parser = argparse.ArgumentParser(description='Booru utility for pictures')
+        parser.add_argument('path', metavar='path_to_folder', type=pathlib.Path, nargs=1, help='path to an image folder')
+        args = parser.parse_args()
+
         # Class vars
         self.imgs = []
-        self.path = "/tmp/samples"
+        self.path = args.path[0]
         self.valid_images = [".jpg", ".gif", ".png"]
         self.selected_item = None
         self.list_global_tags = None
-        print(self.imgs)
 
         hbox_main = QHBoxLayout()
         vbox_search = QVBoxLayout()
@@ -122,7 +125,7 @@ class mainwindow(QWidget):
         # Get images added to directory
         items_to_add = list(set(imgs) - set(items))
         for item in items_to_add:
-            self.additem(self.path+'/'+item)
+            self.additem(str(self.path)+'/'+item)
 
     def refresh(self):
         self.imgs = []
@@ -171,7 +174,7 @@ class mainwindow(QWidget):
 
     def displayimage(self, item):
         # Create popup with full path to image 
-        img_path = self.path+'/'+item.text()
+        img_path = str(self.path)+'/'+item.text()
         self.popup = imagepopup(img_path)
         self.popup.show()
 
