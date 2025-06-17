@@ -7,7 +7,8 @@
 #include <QListWidget>
 #include <QStandardItemModel>
 #include <QStringListModel>
-#include "ItemEditorDelegate.h"
+#include "BooruItemType.h"
+#include "ItemEditor.h"
 
 namespace Ui {
 class BooruMenu;
@@ -18,7 +19,7 @@ class BooruMenu : public QFrame
     Q_OBJECT
 
 public:
-    explicit BooruMenu(QWidget *parent = nullptr, QDir _filesDir = QDir::current(), ItemEditorDelegate *_delegate = nullptr);
+    explicit BooruMenu(QWidget *parent = nullptr, QDir _filesDir = QDir::current());
     ~BooruMenu();
 
 private slots:
@@ -28,7 +29,6 @@ private:
     bool LoadFile(QFileInfo info);
     Ui::BooruMenu *ui;
     QDir filesDir;
-    ItemEditorDelegate *delegate;
     QStandardItemModel model;
     QStringListModel tagModel;
 };

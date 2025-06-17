@@ -17,6 +17,7 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
+    BooruItemType.h \
     BooruMenu.h \
     ItemEditor.h \
     ItemEditorDelegate.h \
