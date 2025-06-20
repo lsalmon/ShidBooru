@@ -19,7 +19,8 @@ class ItemEditor : public QDialog
 public:
     explicit ItemEditor(QWidget *parent = nullptr,
                         QPixmap _item_pixmap = QPixmap(),
-                        QSharedPointer<QStringListModel> _tags_model = nullptr);
+                        QStringList _tags = QStringList());
+    QStringList GetUpdatedTags();
     ~ItemEditor();
 
 private slots:
@@ -28,8 +29,8 @@ private slots:
 
 private:
     QPixmap item_pixmap;
-    QSharedPointer<QStringListModel> tags_model;
-    QStringList saved_tag_list;
+    QStringListModel default_tag_model;
+    QStringList tags;
     Ui::ItemEditor *ui;
 };
 

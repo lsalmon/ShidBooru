@@ -4,18 +4,17 @@
 
 ItemEditor::ItemEditor(QWidget *parent,
                        QPixmap _item_pixmap,
-                       QSharedPointer<QStringListModel> _tags_model) :
+                       QStringList _tags) :
     QDialog(parent),
     item_pixmap(_item_pixmap),
-    tags_model(_tags_model),
+    tags(_tags),
     ui(new Ui::ItemEditor)
 {
     ui->setupUi(this);
     ui->picture->setPixmap(item_pixmap);
-    if(tags_model) {
-        saved_tag_list = tags_model.get()->stringList();
-        ui->tagListView->setModel(tags_model.get());
-    }
+    ui->tagListView->setModel(&default_tag_model);
+    // Set tags to a model inside the dialog box and update the QStringList of the model
+    this->default_tag_model.setStringList(tags);
 
     connect(ui->addButton, &QPushButton::clicked, this, &ItemEditor::AddTag);
     connect(ui->removeButton, &QPushButton::clicked, this, &ItemEditor::RemoveSelectedTag);
@@ -24,11 +23,11 @@ ItemEditor::ItemEditor(QWidget *parent,
 void ItemEditor::AddTag()
 {
     QString tag = this->ui->tagLineEdit->text().trimmed();
-qDebug() << "tag :" << tag;
-    if(!tag.isEmpty() && this->tags_model.get()) {
-        QStringList tag_list = this->tags_model.get()->stringList();
+
+    if(!tag.isEmpty() && this->ui->tagListView->model() != nullptr) {
+        QStringList tag_list = this->default_tag_model.stringList();
         tag_list.append(tag);
-        this->tags_model.get()->setStringList(tag_list);
+        this->default_tag_model.setStringList(tag_list);
         this->ui->tagLineEdit->clear();
     }
 }
@@ -37,10 +36,15 @@ void ItemEditor::RemoveSelectedTag()
 {
     QModelIndex tag_index = this->ui->tagListView->currentIndex();
     if(tag_index.isValid()) {
-        QStringList tag_list = tags_model.get()->stringList();
+        QStringList tag_list = this->default_tag_model.stringList();
         tag_list.removeAt(tag_index.row());
-        tags_model.get()->setStringList(tag_list);
+        this->default_tag_model.setStringList(tag_list);
     }
+}
+
+QStringList ItemEditor::GetUpdatedTags()
+{
+    return this->default_tag_model.stringList();
 }
 
 ItemEditor::~ItemEditor()

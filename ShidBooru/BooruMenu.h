@@ -23,10 +23,13 @@ public:
     ~BooruMenu();
 
 private slots:
+    void viewClickedItemTag(const QModelIndex& idx);
     void viewDoubleClickedItem(const QModelIndex& idx);
+    void getUpdatedTagList(int state);
 
 private:
     bool LoadFile(QFileInfo info);
+    ItemEditor* editor;
     Ui::BooruMenu *ui;
     QDir filesDir;
     QStandardItemModel model;

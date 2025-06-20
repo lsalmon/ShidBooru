@@ -9,11 +9,11 @@
 
 struct BooruTypeItem {
     QPixmap picture;
-    QSharedPointer<QStringListModel> tags;
+    QStringList tags;
     BooruTypeItem()
     {
     }
-    BooruTypeItem(QPixmap _picture, QSharedPointer<QStringListModel> _tags) :
+    BooruTypeItem(QPixmap _picture, QStringList _tags) :
         picture(_picture),
         tags(_tags)
     {
