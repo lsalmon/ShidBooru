@@ -6,6 +6,7 @@
 #include <QStandardItemModel>
 #include <QStringListModel>
 #include <QDebug>
+#include <QMessageBox>
 #include "BooruItemType.h"
 
 namespace Ui {

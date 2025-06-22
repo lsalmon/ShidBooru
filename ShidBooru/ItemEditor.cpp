@@ -29,10 +29,15 @@ void ItemEditor::AddTag()
 {
     QString tag = this->ui->tagLineEdit->text().trimmed();
 
+    // Check if LineEdit not empty and tag not already in list
     if(!tag.isEmpty() && this->ui->tagListView->model() != nullptr) {
         QStringList tag_list = this->default_tag_model.stringList();
-        tag_list.append(tag);
-        this->default_tag_model.setStringList(tag_list);
+        if(tag_list.indexOf(tag) != -1) {
+            QMessageBox::warning(this, tr("ShidBooru"), tr("Tag already exists"));
+        } else {
+            tag_list.append(tag);
+            this->default_tag_model.setStringList(tag_list);
+        };
         this->ui->tagLineEdit->clear();
     }
 }
