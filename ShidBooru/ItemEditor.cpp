@@ -25,6 +25,8 @@ ItemEditor::ItemEditor(QWidget *parent,
     connect(ui->removeButton, &QPushButton::clicked, this, &ItemEditor::RemoveSelectedTag);
 }
 
+
+
 void ItemEditor::AddTag()
 {
     QString tag = this->ui->tagLineEdit->text().trimmed();
@@ -55,6 +57,20 @@ void ItemEditor::RemoveSelectedTag()
 QStringList ItemEditor::GetUpdatedTags()
 {
     return this->default_tag_model.stringList();
+}
+
+void ItemEditor::mousePressEvent(QMouseEvent *event)
+{
+    if(event->button() == Qt::RightButton) {
+        QMenu menu(this);
+        QAction *copy = menu.addAction("Copy picture to clipboard");
+        QAction *selected = menu.exec(event->globalPos());
+
+        if(selected == copy) {
+            QClipboard *clipboard = QGuiApplication::clipboard();
+            clipboard->setPixmap(item_pixmap);
+        }
+    }
 }
 
 ItemEditor::~ItemEditor()

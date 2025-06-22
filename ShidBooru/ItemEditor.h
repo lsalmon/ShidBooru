@@ -7,6 +7,10 @@
 #include <QStringListModel>
 #include <QDebug>
 #include <QMessageBox>
+#include <QMouseEvent>
+#include <QMenu>
+#include <QAction>
+#include <QClipboard>
 #include "BooruItemType.h"
 
 namespace Ui {
@@ -33,6 +37,9 @@ private:
     QStringListModel default_tag_model;
     QStringList tags;
     Ui::ItemEditor *ui;
+
+protected:
+    void mousePressEvent(QMouseEvent* event);
 };
 
 #endif // ITEMEDITOR_H

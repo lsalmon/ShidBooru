@@ -29,6 +29,7 @@ private slots:
 
 private:
     bool LoadFile(QFileInfo info);
+    bool eventFilter(QObject *obj, QEvent *event);
     ItemEditor* editor;
     Ui::BooruMenu *ui;
     QDir filesDir;

@@ -29,6 +29,7 @@ BooruMenu::BooruMenu(QWidget *parent, QDir _filesDir) :
 
     connect(ui->listViewFiles, &QListView::clicked, this, &BooruMenu::viewClickedItemTag);
     connect(ui->listViewFiles, &QListView::doubleClicked, this, &BooruMenu::viewDoubleClickedItem);
+    ui->listViewFiles->viewport()->installEventFilter(this);
 }
 
 BooruMenu::~BooruMenu()
@@ -70,6 +71,35 @@ bool BooruMenu::LoadFile(QFileInfo info)
 
     model.appendRow(item);
     return true;
+}
+
+bool BooruMenu::eventFilter(QObject *obj, QEvent *event)
+{
+    if(event->type() == QEvent::MouseButtonPress && obj == ui->listViewFiles->viewport()) {
+        QMouseEvent *e = static_cast<QMouseEvent *>(event);
+        if(e->button() == Qt::RightButton) {
+            QMenu menu(this);
+            QAction *copy = menu.addAction("Copy picture to clipboard");
+
+            // Manually set item as selected
+            QModelIndex idx = ui->listViewFiles->indexAt(e->pos());
+
+            // Also works with clearSelection() but leaves a light blue marker around previously selected
+            ui->listViewFiles->selectionModel()->clear();
+            ui->listViewFiles->selectionModel()->select(idx, QItemSelectionModel::Select);
+
+            QAction *selected = menu.exec(e->globalPos());
+
+            if(selected == copy) {
+                QClipboard *clipboard = QGuiApplication::clipboard();
+                QVariant item_var = ui->listViewFiles->indexAt(e->pos()).data(Qt::UserRole);
+                BooruTypeItem item_data = item_var.value<BooruTypeItem>();
+                clipboard->setPixmap(item_data.picture);
+            }
+        }
+    }
+
+    return false;
 }
 
 void BooruMenu::viewClickedItemTag(const QModelIndex& idx)
