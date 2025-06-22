@@ -11,7 +11,12 @@ ItemEditor::ItemEditor(QWidget *parent,
     ui(new Ui::ItemEditor)
 {
     ui->setupUi(this);
+    ui->horizontalLayout->setSizeConstraint(QLayout::SetFixedSize);
+    ui->picture->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     ui->picture->setPixmap(item_pixmap);
+
+    this->adjustSize();
+
     ui->tagListView->setModel(&default_tag_model);
     // Set tags to a model inside the dialog box and update the QStringList of the model
     this->default_tag_model.setStringList(tags);
