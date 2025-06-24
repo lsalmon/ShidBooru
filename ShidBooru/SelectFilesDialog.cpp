@@ -1,5 +1,5 @@
 #include "SelectFilesDialog.h"
-#include "ui_selectfilesdialog.h"
+#include "ui_SelectFilesDialog.h"
 
 SelectFilesDialog::SelectFilesDialog(QWidget *parent) :
     QDialog(parent),

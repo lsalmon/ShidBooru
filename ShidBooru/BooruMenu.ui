@@ -1,48 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>BooruMenu</class>
- <widget class="QFrame" name="BooruMenu">
+ <widget class="QMainWindow" name="BooruMenu">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>889</width>
-    <height>655</height>
+    <width>800</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Frame</string>
+   <string>MainWindow</string>
   </property>
-  <widget class="QListView" name="listViewFiles">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>50</y>
-     <width>621</width>
-     <height>611</height>
-    </rect>
-   </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="horizontalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>9</y>
+      <width>781</width>
+      <height>541</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QListView" name="listViewFiles"/>
+     </item>
+     <item>
+      <widget class="QListView" name="listViewTags"/>
+     </item>
+    </layout>
+   </widget>
   </widget>
-  <widget class="QListView" name="listViewTags">
-   <property name="geometry">
-    <rect>
-     <x>620</x>
-     <y>50</y>
-     <width>271</width>
-     <height>611</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QFrame" name="frame">
+  <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>891</width>
-     <height>51</height>
+     <width>800</width>
+     <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuAdd_Image">
+    <property name="title">
+     <string>Add Image</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuDelete_Image">
+    <property name="title">
+     <string>Delete Image</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuFind_Image">
+    <property name="title">
+     <string>Find Image</string>
+    </property>
+   </widget>
+   <addaction name="menuAdd_Image"/>
+   <addaction name="menuDelete_Image"/>
+   <addaction name="menuFind_Image"/>
   </widget>
+  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>

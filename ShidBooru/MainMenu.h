@@ -1,7 +1,7 @@
 #ifndef MAINMENU_H
 #define MAINMENU_H
 
-#include <QMainWindow>
+#include <QWidget>
 #include <QAbstractButton>
 #include "SelectFilesDialog.h"
 #include "BooruMenu.h"
@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainMenu; }
 QT_END_NAMESPACE
 
-class MainMenu : public QMainWindow
+class MainMenu : public QWidget
 {
     Q_OBJECT
 

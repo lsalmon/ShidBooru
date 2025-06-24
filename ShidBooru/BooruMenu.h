@@ -4,6 +4,7 @@
 #include <QFrame>
 #include <QDir>
 #include <QDebug>
+#include <QMainWindow>
 #include <QListWidget>
 #include <QStandardItemModel>
 #include <QStringListModel>
@@ -14,7 +15,7 @@ namespace Ui {
 class BooruMenu;
 }
 
-class BooruMenu : public QFrame
+class BooruMenu : public QMainWindow
 {
     Q_OBJECT
 

@@ -1,9 +1,9 @@
 #include "MainMenu.h"
-#include "ui_mainmenu.h"
+#include "ui_MainMenu.h"
 #include <QDebug>
 
 MainMenu::MainMenu(QWidget *parent)
-    : QMainWindow(parent)
+    : QWidget(parent)
     , ui(new Ui::MainMenu)
 {
     ui->setupUi(this);
@@ -19,7 +19,7 @@ MainMenu::~MainMenu()
 void MainMenu::closeEvent(QCloseEvent *event)
 {
     qDebug() << "Close event";
-    QMainWindow::closeEvent(event);
+    //QMainWindow::closeEvent(event);
 }
 
 void MainMenu::onCreateBooruButtonClicked(bool checked)

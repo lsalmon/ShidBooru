@@ -1,9 +1,9 @@
 #include "BooruMenu.h"
-#include "ui_boorumenu.h"
+#include "ui_BooruMenu.h"
 #include <QImageReader>
 
 BooruMenu::BooruMenu(QWidget *parent, QDir _filesDir) :
-    QFrame(parent),
+    QMainWindow(parent),
     ui(new Ui::BooruMenu),
     filesDir(_filesDir)
 {
