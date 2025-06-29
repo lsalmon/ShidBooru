@@ -30,24 +30,34 @@ ItemEditor::ItemEditor(QWidget *parent,
 void ItemEditor::AddTag()
 {
     QString tag = this->ui->tagLineEdit->text().trimmed();
-
-    // Check if LineEdit not empty and tag not already in list
-    if(!tag.isEmpty() && this->ui->tagListView->model() != nullptr) {
-        QStringList tag_list = this->default_tag_model.stringList();
-        if(tag_list.indexOf(tag) != -1) {
-            QMessageBox::warning(this, tr("ShidBooru"), tr("Tag already exists"));
-        } else {
-            tag_list.append(tag);
-            this->default_tag_model.setStringList(tag_list);
-        };
-        this->ui->tagLineEdit->clear();
+    // Check if LineEdit not empty and model exists
+    if(!tag.isEmpty() && this->ui->tagListView->model() != nullptr)
+    {
+        QStringList tag_input_list = tag.split(" ", Qt::SkipEmptyParts);
+        for(const QString &tag  : tag_input_list)
+        {
+            // Remove empty strings
+            if(!tag.isEmpty())
+            {
+                // Check if tag not already in list
+                QStringList tag_list = this->default_tag_model.stringList();
+                if(tag_list.indexOf(tag) != -1) {
+                    QMessageBox::warning(this, tr("ShidBooru"), tr("Tag already exists"));
+                } else {
+                    tag_list.append(tag);
+                    this->default_tag_model.setStringList(tag_list);
+                };
+                this->ui->tagLineEdit->clear();
+            }
+        }
     }
 }
 
 void ItemEditor::RemoveSelectedTag()
 {
     QModelIndex tag_index = this->ui->tagListView->currentIndex();
-    if(tag_index.isValid()) {
+    if(tag_index.isValid())
+    {
         QStringList tag_list = this->default_tag_model.stringList();
         tag_list.removeAt(tag_index.row());
         this->default_tag_model.setStringList(tag_list);
@@ -61,7 +71,8 @@ QStringList ItemEditor::GetUpdatedTags()
 
 void ItemEditor::mousePressEvent(QMouseEvent *event)
 {
-    if(event->button() == Qt::RightButton) {
+    if(event->button() == Qt::RightButton)
+    {
         QMenu menu(this);
         QAction *copy = menu.addAction("Copy picture to clipboard");
         QAction *selected = menu.exec(event->globalPos());

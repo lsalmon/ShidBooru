@@ -64,7 +64,7 @@ void BooruMenu::findImage(void)
 
 void BooruMenu::searchImage(QString tags)
 {
-    QStringList tag_list = tags.split(" ");
+    QStringList tag_list = tags.split(" ", Qt::SkipEmptyParts);
     proxyModel->setSearchTag(tag_list, true);
 
     // Auto-select first item in list if it exists

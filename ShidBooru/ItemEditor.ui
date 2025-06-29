@@ -38,7 +38,7 @@
    <item>
     <widget class="QLabel" name="tagLineLabel">
      <property name="text">
-      <string>Tag name</string>
+      <string>Tag list, separated by a space :</string>
      </property>
     </widget>
    </item>
