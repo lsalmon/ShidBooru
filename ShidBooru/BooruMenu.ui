@@ -33,35 +33,36 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuAdd_Image">
-    <property name="title">
-     <string>Add Image</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuDelete_Image">
-    <property name="title">
-     <string>Delete Image</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuFind_Image">
-    <property name="title">
-     <string>Find Image</string>
-    </property>
-   </widget>
-   <addaction name="menuAdd_Image"/>
-   <addaction name="menuDelete_Image"/>
-   <addaction name="menuFind_Image"/>
-  </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionAdd_Image"/>
+   <addaction name="actionRemove_Image"/>
+   <addaction name="actionFind_Image"/>
+  </widget>
+  <action name="actionAdd_Image">
+   <property name="text">
+    <string>Add Image</string>
+   </property>
+  </action>
+  <action name="actionRemove_Image">
+   <property name="text">
+    <string>Remove Image</string>
+   </property>
+  </action>
+  <action name="actionFind_Image">
+   <property name="text">
+    <string>Find Image</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

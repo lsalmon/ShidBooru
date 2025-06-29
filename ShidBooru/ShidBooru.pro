@@ -13,6 +13,7 @@ SOURCES += \
     ItemEditor.cpp \
     ItemEditorDelegate.cpp \
     MainMenu.cpp \
+    SearchTagDialog.cpp \
     SelectFilesDialog.cpp \
     main.cpp
 
@@ -22,12 +23,15 @@ HEADERS += \
     ItemEditor.h \
     ItemEditorDelegate.h \
     MainMenu.h \
-    SelectFilesDialog.h
+    SearchTagDialog.h \
+    SelectFilesDialog.h \
+    TagFilterProxyModel.h
 
 FORMS += \
     BooruMenu.ui \
     ItemEditor.ui \
     MainMenu.ui \
+    SearchTagDialog.ui \
     SelectFilesDialog.ui
 
 # Default rules for deployment.

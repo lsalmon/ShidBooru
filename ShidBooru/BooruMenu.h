@@ -4,12 +4,16 @@
 #include <QFrame>
 #include <QDir>
 #include <QDebug>
+#include <QAction>
 #include <QMainWindow>
 #include <QListWidget>
 #include <QStandardItemModel>
 #include <QStringListModel>
+#include <QInputDialog>
 #include "BooruItemType.h"
 #include "ItemEditor.h"
+#include "TagFilterProxyModel.h"
+#include "SearchTagDialog.h"
 
 namespace Ui {
 class BooruMenu;
@@ -27,6 +31,10 @@ private slots:
     void viewClickedItemTag(const QModelIndex& idx);
     void viewDoubleClickedItem(const QModelIndex& idx);
     void getUpdatedTagList(int state);
+    void findImage(void);
+    void searchImage(QString tags);
+    void resetSearchImage(void);
+    void searchImageFinished(bool res);
 
 private:
     bool LoadFile(QFileInfo info);
@@ -35,7 +43,9 @@ private:
     Ui::BooruMenu *ui;
     QDir filesDir;
     QStandardItemModel model;
+    TagFilterProxyModel *proxyModel;
     QStringListModel tagModel;
+    bool searchInProgress = false;
 };
 
 #endif // BOORUMENU_H
