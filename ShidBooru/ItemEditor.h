@@ -10,6 +10,8 @@
 #include <QMouseEvent>
 #include <QMenu>
 #include <QAction>
+#include <QBuffer>
+#include <QMovie>
 #include <QClipboard>
 #include "BooruItemType.h"
 
@@ -23,8 +25,7 @@ class ItemEditor : public QDialog
 
 public:
     explicit ItemEditor(QWidget *parent = nullptr,
-                        QPixmap _item_pixmap = QPixmap(),
-                        QStringList _tags = QStringList());
+                        BooruTypeItem *_item = nullptr);
     QStringList GetUpdatedTags();
     ~ItemEditor();
 
@@ -33,9 +34,8 @@ private slots:
     void RemoveSelectedTag();
 
 private:
-    QPixmap item_pixmap;
+    BooruTypeItem *item;
     QStringListModel default_tag_model;
-    QStringList tags;
     Ui::ItemEditor *ui;
 
 protected:

@@ -109,11 +109,20 @@ bool BooruMenu::LoadFile(QFileInfo info)
         qDebug() << "Load " << info.completeBaseName() << Qt::endl;
         QImage image(info.absoluteFilePath());
         item = new QStandardItem(info.completeBaseName());
+        item->setText(info.completeBaseName());
         BooruTypeItem item_data = {
             QPixmap::fromImage(image),
             QStringList()
         };
-        item->setText(info.completeBaseName());
+        if(info.completeSuffix() == "gif")
+        {
+            item_data.type = GIF;
+            QFile file(info.absoluteFilePath());
+            if(file.open(QIODevice::ReadOnly))
+            {
+                item_data.gif = file.readAll();
+            }
+        }
         item->setIcon(QIcon(QPixmap::fromImage(image)));
         item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
@@ -172,15 +181,13 @@ void BooruMenu::viewDoubleClickedItem(const QModelIndex& idx)
 {
     QVariant item_var = idx.data(Qt::UserRole);
     BooruTypeItem item_data = item_var.value<BooruTypeItem>();
-    QPixmap item_pixmap = item_data.picture;
-    auto tag_model = item_data.tags;
 
-    editor = new ItemEditor(nullptr, item_pixmap, tag_model);
+    editor = new ItemEditor(nullptr, &item_data);
     connect(editor, &QDialog::finished, this, &BooruMenu::getUpdatedTagList);
 
     // Block on dialog window
     editor->setModal(true);
-    editor->show();
+    editor->exec();
 
     qDebug() << QObject::trUtf8("Item %1 has been double clicked.").arg(idx.data().toString());
 }

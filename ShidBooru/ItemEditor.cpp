@@ -3,23 +3,32 @@
 #include <QDebug>
 
 ItemEditor::ItemEditor(QWidget *parent,
-                       QPixmap _item_pixmap,
-                       QStringList _tags) :
+                       BooruTypeItem *_item) :
     QDialog(parent),
-    item_pixmap(_item_pixmap),
-    tags(_tags),
+    item(_item),
     ui(new Ui::ItemEditor)
 {
     ui->setupUi(this);
     ui->horizontalLayout->setSizeConstraint(QLayout::SetFixedSize);
     ui->picture->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    ui->picture->setPixmap(item_pixmap);
+    if(item->type == GIF)
+    {
+        QBuffer *buf = new QBuffer(&item->gif);
+        buf->open(QIODevice::ReadOnly);
+        QMovie *gif_movie = new QMovie(buf, QByteArray(), this);
+        ui->picture->setMovie(gif_movie);
+        gif_movie->start();
+    }
+    else
+    {
+        ui->picture->setPixmap(item->picture);
+    }
 
     this->adjustSize();
 
     ui->tagListView->setModel(&default_tag_model);
     // Set tags to a model inside the dialog box and update the QStringList of the model
-    this->default_tag_model.setStringList(tags);
+    this->default_tag_model.setStringList(item->tags);
 
     connect(ui->addButton, &QPushButton::clicked, this, &ItemEditor::AddTag);
     connect(ui->removeButton, &QPushButton::clicked, this, &ItemEditor::RemoveSelectedTag);
@@ -79,7 +88,7 @@ void ItemEditor::mousePressEvent(QMouseEvent *event)
 
         if(selected == copy) {
             QClipboard *clipboard = QGuiApplication::clipboard();
-            clipboard->setPixmap(item_pixmap);
+            clipboard->setPixmap(item->picture);
         }
     }
 }
