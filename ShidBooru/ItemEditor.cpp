@@ -82,14 +82,7 @@ void ItemEditor::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::RightButton)
     {
-        QMenu menu(this);
-        QAction *copy = menu.addAction("Copy picture to clipboard");
-        QAction *selected = menu.exec(event->globalPos());
-
-        if(selected == copy) {
-            QClipboard *clipboard = QGuiApplication::clipboard();
-            clipboard->setPixmap(item->picture);
-        }
+        ItemContextMenu menu(this, event->globalPos(), item);
     }
 }
 

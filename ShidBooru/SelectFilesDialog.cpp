@@ -18,6 +18,7 @@ SelectFilesDialog::~SelectFilesDialog()
 
 void SelectFilesDialog::SelectFiles(bool checked)
 {
+    Q_UNUSED(checked);
     qDebug() << "Select files";
     QString dir = QFileDialog::getExistingDirectory();
     if(dir.isEmpty())

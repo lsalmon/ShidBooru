@@ -12,8 +12,8 @@
 #include <QAction>
 #include <QBuffer>
 #include <QMovie>
-#include <QClipboard>
 #include "BooruItemType.h"
+#include "ItemContextMenu.h"
 
 namespace Ui {
 class ItemEditor;

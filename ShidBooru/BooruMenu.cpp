@@ -114,6 +114,7 @@ bool BooruMenu::LoadFile(QFileInfo info)
             QPixmap::fromImage(image),
             QStringList()
         };
+        item_data.extension = info.completeSuffix();
         if(info.completeSuffix() == "gif")
         {
             item_data.type = GIF;
@@ -133,6 +134,7 @@ bool BooruMenu::LoadFile(QFileInfo info)
             QPixmap(),
             QStringList()
         };
+        item_data.extension = info.completeSuffix();
         item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
 
@@ -145,9 +147,6 @@ bool BooruMenu::eventFilter(QObject *obj, QEvent *event)
     if(event->type() == QEvent::MouseButtonPress && obj == ui->listViewFiles->viewport()) {
         QMouseEvent *e = static_cast<QMouseEvent *>(event);
         if(e->button() == Qt::RightButton) {
-            QMenu menu(this);
-            QAction *copy = menu.addAction("Copy picture to clipboard");
-
             // Manually set item as selected
             QModelIndex idx = ui->listViewFiles->indexAt(e->pos());
 
@@ -155,14 +154,9 @@ bool BooruMenu::eventFilter(QObject *obj, QEvent *event)
             ui->listViewFiles->selectionModel()->clear();
             ui->listViewFiles->selectionModel()->select(idx, QItemSelectionModel::Select);
 
-            QAction *selected = menu.exec(e->globalPos());
-
-            if(selected == copy) {
-                QClipboard *clipboard = QGuiApplication::clipboard();
-                QVariant item_var = ui->listViewFiles->indexAt(e->pos()).data(Qt::UserRole);
-                BooruTypeItem item_data = item_var.value<BooruTypeItem>();
-                clipboard->setPixmap(item_data.picture);
-            }
+            QVariant item_var = ui->listViewFiles->indexAt(e->pos()).data(Qt::UserRole);
+            BooruTypeItem item_data = item_var.value<BooruTypeItem>();
+            ItemContextMenu menu(this, e->globalPos(), &item_data);
         }
     }
 

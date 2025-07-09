@@ -14,6 +14,7 @@
 #include "ItemEditor.h"
 #include "TagFilterProxyModel.h"
 #include "SearchTagDialog.h"
+#include "ItemContextMenu.h"
 
 namespace Ui {
 class BooruMenu;

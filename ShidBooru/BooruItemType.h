@@ -19,20 +19,23 @@ struct BooruTypeItem {
     QStringList tags;
     QByteArray gif;
     itemType type;
+    QString extension;
     BooruTypeItem()
     {
     }
-    BooruTypeItem(QPixmap _picture, QStringList _tags, QByteArray _gif = QByteArray(), itemType _type = STILL_IMG) :
+    BooruTypeItem(QPixmap _picture, QStringList _tags, QByteArray _gif = QByteArray(), itemType _type = STILL_IMG, QString _extension = "") :
         picture(_picture),
         tags(_tags),
-        type(_type)
+        type(_type),
+        extension(_extension)
     {
     }
     BooruTypeItem(const BooruTypeItem& type_item) :
         picture(type_item.picture),
         tags(type_item.tags),
         gif(type_item.gif),
-        type(type_item.type)
+        type(type_item.type),
+        extension(type_item.extension)
     {
     }
     auto operator=(const BooruTypeItem& type_item) -> BooruTypeItem&

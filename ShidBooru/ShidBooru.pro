@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     BooruMenu.cpp \
+    ItemContextMenu.cpp \
     ItemEditor.cpp \
     ItemEditorDelegate.cpp \
     MainMenu.cpp \
@@ -20,6 +21,7 @@ SOURCES += \
 HEADERS += \
     BooruItemType.h \
     BooruMenu.h \
+    ItemContextMenu.h \
     ItemEditor.h \
     ItemEditorDelegate.h \
     MainMenu.h \
