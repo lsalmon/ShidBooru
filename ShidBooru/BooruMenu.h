@@ -10,6 +10,7 @@
 #include <QStandardItemModel>
 #include <QStringListModel>
 #include <QInputDialog>
+#include <QMessageBox>
 #include "BooruItemType.h"
 #include "ItemEditor.h"
 #include "TagFilterProxyModel.h"
@@ -33,6 +34,8 @@ private slots:
     void viewDoubleClickedItem(const QModelIndex& idx);
     void getUpdatedTagList(int state);
     void findImage(void);
+    void addImage(void);
+    void removeImage(void);
     void searchImage(QString tags);
     void resetSearchImage(void);
     void searchImageFinished(bool res);

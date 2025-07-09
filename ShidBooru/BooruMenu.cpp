@@ -38,6 +38,12 @@ BooruMenu::BooruMenu(QWidget *parent, QDir _filesDir) :
         if(item->text() == "Find Image") {
             connect(item, &QAction::triggered, this, &BooruMenu::findImage);
         }
+        if(item->text() == "Add Image") {
+            connect(item, &QAction::triggered, this, &BooruMenu::addImage);
+        }
+        if(item->text() == "Remove Image") {
+            connect(item, &QAction::triggered, this, &BooruMenu::removeImage);
+        }
     }
 
     connect(ui->listViewFiles, &QListView::clicked, this, &BooruMenu::viewClickedItemTag);
@@ -60,6 +66,34 @@ void BooruMenu::findImage(void)
     connect(tagDialog, &SearchTagDialog::finished, this, &BooruMenu::searchImageFinished);
     searchInProgress = true;
     tagDialog->show();
+}
+
+void BooruMenu::addImage(void)
+{
+
+}
+
+void BooruMenu::removeImage(void)
+{
+    QModelIndex idx_proxy = this->ui->listViewFiles->currentIndex();
+    QModelIndex idx = proxyModel->mapToSource(idx_proxy);
+    QString item_desc = idx.data().toString();
+    QMessageBox warning_item_missing;
+    warning_item_missing.setIcon(QMessageBox::Warning);
+
+    if(!idx.isValid())
+    {
+        warning_item_missing.setText("Could not find the item "+item_desc);
+        warning_item_missing.exec();
+    }
+
+    QMessageBox::StandardButton confirm = QMessageBox::question(this, "Confirm suppression", "Delete item "+item_desc+" ?", QMessageBox::Yes|QMessageBox::No);
+
+    if(confirm == QMessageBox::Yes && !proxyModel->removeRow(idx.row()))
+    {
+        warning_item_missing.setText("Could not delete the item "+item_desc);
+        warning_item_missing.exec();
+    }
 }
 
 void BooruMenu::searchImage(QString tags)
