@@ -15,6 +15,7 @@
 #include "ItemEditor.h"
 #include "TagFilterProxyModel.h"
 #include "SearchTagDialog.h"
+#include "SelectFilesDialog.h"
 #include "ItemContextMenu.h"
 
 namespace Ui {
@@ -41,6 +42,7 @@ private slots:
     void searchImageFinished(bool res);
 
 private:
+    void BrowseFiles(QDir dir);
     bool LoadFile(QFileInfo info);
     bool eventFilter(QObject *obj, QEvent *event);
     ItemEditor* editor;

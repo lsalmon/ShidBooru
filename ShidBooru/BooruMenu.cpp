@@ -9,18 +9,8 @@ BooruMenu::BooruMenu(QWidget *parent, QDir _filesDir) :
 {
     ui->setupUi(this);
 
-    QStringList files = filesDir.entryList(QDir::Files);
-    for(const QString &file : files)
-    {
-        QString path = filesDir.filePath(file);
-        if(path.isEmpty())
-        {
-            continue;
-        }
-
-        QFileInfo fileinfo(path);
-        LoadFile(path);
-    }
+    // Load items from user directory
+    BrowseFiles(filesDir);
 
     proxyModel = new TagFilterProxyModel(this);
     //proxyModel->setFilterRole(Qt::UserRole);
@@ -70,7 +60,11 @@ void BooruMenu::findImage(void)
 
 void BooruMenu::addImage(void)
 {
-
+    SelectFilesDialog dialbox(this);
+    if(dialbox.exec() == QDialog::Accepted)
+    {
+        BrowseFiles(dialbox.selectedDir);
+    }
 }
 
 void BooruMenu::removeImage(void)
@@ -128,6 +122,22 @@ BooruMenu::~BooruMenu()
 {
     delete ui;
     model.clear();
+}
+
+void BooruMenu::BrowseFiles(QDir dir)
+{
+    QStringList files = dir.entryList(QDir::Files);
+    for(const QString &file : files)
+    {
+        QString path = dir.filePath(file);
+        if(path.isEmpty())
+        {
+            continue;
+        }
+
+        QFileInfo fileinfo(path);
+        LoadFile(path);
+    }
 }
 
 bool BooruMenu::LoadFile(QFileInfo info)
