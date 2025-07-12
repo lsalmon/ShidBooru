@@ -27,7 +27,7 @@ class BooruMenu : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit BooruMenu(QWidget *parent = nullptr, QDir _filesDir = QDir::current());
+    explicit BooruMenu(QWidget *parent = nullptr, QString _file = "");
     ~BooruMenu();
 
 private slots:
@@ -47,7 +47,7 @@ private:
     bool eventFilter(QObject *obj, QEvent *event);
     ItemEditor* editor;
     Ui::BooruMenu *ui;
-    QDir filesDir;
+    QString file;
     QStandardItemModel model;
     TagFilterProxyModel *proxyModel;
     QStringListModel tagModel;

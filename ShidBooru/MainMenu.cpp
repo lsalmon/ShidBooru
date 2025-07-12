@@ -29,7 +29,7 @@ void MainMenu::onCreateBooruButtonClicked(bool checked)
     SelectFilesDialog dialbox(this);
     if(dialbox.exec() == QDialog::Accepted)
     {
-        BooruMenu* newmenu = new BooruMenu(this, dialbox.selectedDir);
+        BooruMenu* newmenu = new BooruMenu(this, dialbox.selected);
         newmenu->setAttribute(Qt::WA_DeleteOnClose);
         newmenu->show();
     }

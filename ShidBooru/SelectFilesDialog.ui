@@ -29,7 +29,7 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
-  <widget class="QPushButton" name="folderExplorer">
+  <widget class="QPushButton" name="fileSystemExplorer">
    <property name="geometry">
     <rect>
      <x>120</x>
@@ -67,6 +67,26 @@
    <property name="alignment">
     <set>Qt::AlignCenter</set>
    </property>
+  </widget>
+  <widget class="QComboBox" name="comboBox">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>170</y>
+     <width>86</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>Directory</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>File</string>
+    </property>
+   </item>
   </widget>
  </widget>
  <resources/>

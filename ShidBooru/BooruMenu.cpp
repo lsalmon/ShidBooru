@@ -2,15 +2,23 @@
 #include "ui_BooruMenu.h"
 #include <QImageReader>
 
-BooruMenu::BooruMenu(QWidget *parent, QDir _filesDir) :
+BooruMenu::BooruMenu(QWidget *parent, QString _file) :
     QMainWindow(parent),
     ui(new Ui::BooruMenu),
-    filesDir(_filesDir)
+    file(_file)
 {
     ui->setupUi(this);
 
-    // Load items from user directory
-    BrowseFiles(filesDir);
+    // Load items from user directory or from single file
+    QFileInfo fileinfo(file);
+    if(fileinfo.isDir())
+    {
+        BrowseFiles(QDir(file));
+    }
+    else
+    {
+        LoadFile(fileinfo);
+    }
 
     proxyModel = new TagFilterProxyModel(this);
     //proxyModel->setFilterRole(Qt::UserRole);
@@ -63,7 +71,15 @@ void BooruMenu::addImage(void)
     SelectFilesDialog dialbox(this);
     if(dialbox.exec() == QDialog::Accepted)
     {
-        BrowseFiles(dialbox.selectedDir);
+        QFileInfo fileinfo(dialbox.selected);
+        if(fileinfo.isDir())
+        {
+            BrowseFiles(QDir(dialbox.selected));
+        }
+        else
+        {
+            LoadFile(fileinfo);
+        }
     }
 }
 

@@ -6,6 +6,7 @@
 #include <QAbstractButton>
 #include <QDebug>
 #include <QMessageBox>
+#include <QComboBox>
 
 namespace Ui {
 class SelectFilesDialog;
@@ -18,10 +19,12 @@ class SelectFilesDialog : public QDialog
 public:
     explicit SelectFilesDialog(QWidget *parent = nullptr);
     ~SelectFilesDialog();
-    QDir selectedDir;
+    QString selected;
 
 private slots:
-    void SelectFiles(bool checked);
+    void SelectDirectory(bool checked);
+    void SelectFile(bool checked);
+    void ComboChanged(const QString &text);
 
 private:
     Ui::SelectFilesDialog *ui;
