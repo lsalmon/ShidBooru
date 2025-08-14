@@ -2,12 +2,41 @@
 #include "ui_ItemEditor.h"
 #include <QDebug>
 
+static QSqlDatabase db;
+
+const auto INSERT_TAG_SQL = QLatin1String(R"(
+    insert into tags(tag) values(?)
+    )");
+
+const auto INSERT_LINK_SQL = QLatin1String(R"(
+    insert into links(id_item, id_tag) values(?, ?)
+    )");
+
+QVariant addTag(const QString &tag)
+{
+    QSqlQuery q;
+    q.prepare(INSERT_TAG_SQL);
+    q.addBindValue(tag);
+    q.exec();
+    return q.lastInsertId();
+}
+
+void addLink(const QVariant &id_item, const QVariant &id_tag)
+{
+    QSqlQuery q;
+    q.prepare(INSERT_LINK_SQL);
+    q.addBindValue(id_item);
+    q.addBindValue(id_tag);
+    q.exec();
+}
+
 ItemEditor::ItemEditor(QWidget *parent,
                        BooruTypeItem *_item) :
     QDialog(parent),
     item(_item),
     ui(new Ui::ItemEditor)
 {
+    db = QSqlDatabase::database();
     ui->setupUi(this);
     ui->horizontalLayout->setSizeConstraint(QLayout::SetFixedSize);
     ui->picture->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
@@ -34,8 +63,6 @@ ItemEditor::ItemEditor(QWidget *parent,
     connect(ui->removeButton, &QPushButton::clicked, this, &ItemEditor::RemoveSelectedTag);
 }
 
-
-
 void ItemEditor::AddTag()
 {
     QString tag = this->ui->tagLineEdit->text().trimmed();
@@ -55,6 +82,8 @@ void ItemEditor::AddTag()
                 } else {
                     tag_list.append(tag);
                     this->default_tag_model.setStringList(tag_list);
+                    QVariant id_tag = addTag(tag);
+                    addLink(item->sql_id, id_tag);
                 };
                 this->ui->tagLineEdit->clear();
             }

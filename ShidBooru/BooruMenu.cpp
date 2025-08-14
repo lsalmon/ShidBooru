@@ -2,12 +2,93 @@
 #include "ui_BooruMenu.h"
 #include <QImageReader>
 
+static QSqlDatabase db;
+
+const auto ITEM_SQL = QLatin1String(R"(
+    create table items(id_i INTEGER PRIMARY KEY, type integer, path varchar)
+    )");
+
+const auto TAG_SQL = QLatin1String(R"(
+    create table tags(id_t INTEGER PRIMARY KEY, tag varchar)
+    )");
+
+const auto LINK_SQL = QLatin1String(R"(
+    create table links(id_item INTEGER, id_tag INTEGER, PRIMARY KEY (id_item, id_tag), FOREIGN KEY (id_item) REFERENCES items(id_i) ON DELETE CASCADE, FOREIGN KEY (id_tag) REFERENCES tags(id_t) ON DELETE CASCADE)
+    )");
+
+const auto INSERT_ITEM_SQL = QLatin1String(R"(
+    insert into items(type, path) values(?, ?)
+    )");
+
+static void removeDb()
+{
+    db.close();
+    QSqlDatabase::removeDatabase("qt_sql_default_connection");
+qDebug() << "DB removed";
+}
+
+QVariant addItem(int type, const QVariant &path)
+{
+    QSqlQuery q;
+    q.prepare(INSERT_ITEM_SQL);
+    q.addBindValue(type);
+    q.addBindValue(path);
+    q.exec();
+    return q.lastInsertId();
+}
+
 BooruMenu::BooruMenu(QWidget *parent, QString _file) :
     QMainWindow(parent),
     ui(new Ui::BooruMenu),
     file(_file)
 {
     ui->setupUi(this);
+
+qDebug() << QSqlDatabase::drivers();
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    //db.setDatabaseName("BooruInstance");
+    // Store table in RAM
+    db.setDatabaseName(":memory:");
+
+    if(!db.open())
+    {
+        DisplayWarningMessage("Creating db failed with "+db.lastError().text());
+        return ;
+    }
+
+    // Support for foreign keys
+    QSqlQuery setup;
+    setup.exec("PRAGMA foreign_keys = ON;");
+
+    QStringList tables = db.tables();
+    if (tables.contains("items", Qt::CaseInsensitive)
+        && tables.contains("tags", Qt::CaseInsensitive)
+        && tables.contains("links", Qt::CaseInsensitive))
+    {
+        DisplayWarningMessage("db is already full, abort");
+        removeDb();
+        return ;
+    }
+
+    QSqlQuery q;
+    if (!q.exec(ITEM_SQL))
+    {
+        DisplayWarningMessage("Creating Item table failed with "+q.lastError().text());
+        removeDb();
+        return ;
+    }
+    if (!q.exec(TAG_SQL))
+    {
+        DisplayWarningMessage("Creating Tag table failed with "+q.lastError().text());
+        removeDb();
+        return ;
+    }
+    if (!q.exec(LINK_SQL))
+    {
+        DisplayWarningMessage("Creating Item<->Tag table failed with "+q.lastError().text());
+        removeDb();
+        return ;
+    }
 
     // Load items from user directory or from single file
     QFileInfo fileinfo(file);
@@ -137,6 +218,7 @@ void BooruMenu::resetSearchImage(void)
 BooruMenu::~BooruMenu()
 {
     delete ui;
+    removeDb();
     model.clear();
 }
 
@@ -164,17 +246,17 @@ bool BooruMenu::LoadFile(QFileInfo info)
         return false;
     }
 
+    item = new QStandardItem(info.completeBaseName());
+    BooruTypeItem item_data;
+
     if(info.completeSuffix() == "gif" || info.completeSuffix() == "png" || info.completeSuffix() == "jpg" || info.completeSuffix() == "jpeg")
     {
         qDebug() << "Load " << info.completeBaseName() << Qt::endl;
         QImage image(info.absoluteFilePath());
-        item = new QStandardItem(info.completeBaseName());
         item->setText(info.completeBaseName());
-        BooruTypeItem item_data = {
-            QPixmap::fromImage(image),
-            QStringList()
-        };
+        item_data.picture = QPixmap::fromImage(image);
         item_data.extension = info.completeSuffix();
+        item_data.path = info.absoluteFilePath();
         if(info.completeSuffix() == "gif")
         {
             item_data.type = GIF;
@@ -185,16 +267,13 @@ bool BooruMenu::LoadFile(QFileInfo info)
             }
         }
         item->setIcon(QIcon(QPixmap::fromImage(image)));
+        item_data.sql_id = addItem(item_data.type, item_data.path);
         item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
     else
     {
-        item = new QStandardItem(info.completeBaseName());
-        BooruTypeItem item_data = {
-            QPixmap(),
-            QStringList()
-        };
         item_data.extension = info.completeSuffix();
+        item_data.path = info.absoluteFilePath();
         item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
 

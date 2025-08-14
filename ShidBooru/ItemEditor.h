@@ -12,6 +12,9 @@
 #include <QAction>
 #include <QBuffer>
 #include <QMovie>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
 #include "BooruItemType.h"
 #include "ItemContextMenu.h"
 

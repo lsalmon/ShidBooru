@@ -11,6 +11,9 @@
 #include <QStringListModel>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
 #include "BooruItemType.h"
 #include "ItemEditor.h"
 #include "TagFilterProxyModel.h"
@@ -52,6 +55,12 @@ private:
     TagFilterProxyModel *proxyModel;
     QStringListModel tagModel;
     bool searchInProgress = false;
+    static inline void DisplayWarningMessage(QString message) {
+        QMessageBox warning_item_missing;
+        warning_item_missing.setIcon(QMessageBox::Warning);
+        warning_item_missing.setText(message);
+        warning_item_missing.exec();
+    }
 };
 
 #endif // BOORUMENU_H
