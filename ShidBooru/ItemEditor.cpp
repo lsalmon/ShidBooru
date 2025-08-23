@@ -1,34 +1,9 @@
 #include "ItemEditor.h"
 #include "ui_ItemEditor.h"
+#include "QSqlQueryHelper.h"
 #include <QDebug>
 
 static QSqlDatabase db;
-
-const auto INSERT_TAG_SQL = QLatin1String(R"(
-    insert into tags(tag) values(?)
-    )");
-
-const auto INSERT_LINK_SQL = QLatin1String(R"(
-    insert into links(id_item, id_tag) values(?, ?)
-    )");
-
-QVariant addTag(const QString &tag)
-{
-    QSqlQuery q;
-    q.prepare(INSERT_TAG_SQL);
-    q.addBindValue(tag);
-    q.exec();
-    return q.lastInsertId();
-}
-
-void addLink(const QVariant &id_item, const QVariant &id_tag)
-{
-    QSqlQuery q;
-    q.prepare(INSERT_LINK_SQL);
-    q.addBindValue(id_item);
-    q.addBindValue(id_tag);
-    q.exec();
-}
 
 ItemEditor::ItemEditor(QWidget *parent,
                        BooruTypeItem *_item) :
@@ -82,9 +57,17 @@ void ItemEditor::AddTag()
                 } else {
                     tag_list.append(tag);
                     this->default_tag_model.setStringList(tag_list);
-                    QVariant id_tag = addTag(tag);
-                    addLink(item->sql_id, id_tag);
-                };
+                }
+                int id_tag = checkDuplicateTagQuery(tag);
+                if(id_tag < 0) {
+                    id_tag = addTagQuery(tag).toInt();
+                    qDebug() << "New tag id " << id_tag;
+                }
+                int id_link = checkDuplicateLinkQuery(QVariant(id_tag), item->sql_id);
+                if(id_link < 0) {
+                    qDebug() << "New link id " << QString(id_tag) << item->sql_id.toString();
+                    addLinkQuery(item->sql_id, QVariant(id_tag));
+                }
                 this->ui->tagLineEdit->clear();
             }
         }
@@ -97,8 +80,11 @@ void ItemEditor::RemoveSelectedTag()
     if(tag_index.isValid())
     {
         QStringList tag_list = this->default_tag_model.stringList();
+        QString tag = tag_list.at(tag_index.row());
         tag_list.removeAt(tag_index.row());
         this->default_tag_model.setStringList(tag_list);
+        qDebug() <<"Remove tag "+tag;
+        removeTagQuery(tag);
     }
 }
 

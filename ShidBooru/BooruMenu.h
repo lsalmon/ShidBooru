@@ -14,6 +14,7 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QVector>
 #include "BooruItemType.h"
 #include "ItemEditor.h"
 #include "TagFilterProxyModel.h"

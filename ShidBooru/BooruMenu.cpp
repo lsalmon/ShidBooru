@@ -1,40 +1,15 @@
 #include "BooruMenu.h"
 #include "ui_BooruMenu.h"
+#include "QSqlQueryHelper.h"
 #include <QImageReader>
 
 static QSqlDatabase db;
-
-const auto ITEM_SQL = QLatin1String(R"(
-    create table items(id_i INTEGER PRIMARY KEY, type integer, path varchar)
-    )");
-
-const auto TAG_SQL = QLatin1String(R"(
-    create table tags(id_t INTEGER PRIMARY KEY, tag varchar)
-    )");
-
-const auto LINK_SQL = QLatin1String(R"(
-    create table links(id_item INTEGER, id_tag INTEGER, PRIMARY KEY (id_item, id_tag), FOREIGN KEY (id_item) REFERENCES items(id_i) ON DELETE CASCADE, FOREIGN KEY (id_tag) REFERENCES tags(id_t) ON DELETE CASCADE)
-    )");
-
-const auto INSERT_ITEM_SQL = QLatin1String(R"(
-    insert into items(type, path) values(?, ?)
-    )");
 
 static void removeDb()
 {
     db.close();
     QSqlDatabase::removeDatabase("qt_sql_default_connection");
 qDebug() << "DB removed";
-}
-
-QVariant addItem(int type, const QVariant &path)
-{
-    QSqlQuery q;
-    q.prepare(INSERT_ITEM_SQL);
-    q.addBindValue(type);
-    q.addBindValue(path);
-    q.exec();
-    return q.lastInsertId();
 }
 
 BooruMenu::BooruMenu(QWidget *parent, QString _file) :
@@ -192,6 +167,40 @@ void BooruMenu::searchImage(QString tags)
     QStringList tag_list = tags.split(" ", Qt::SkipEmptyParts);
     proxyModel->setSearchTag(tag_list, true);
 
+/*
+    QString search_query(GET_ITEMS_FROM_TAG_SQL);
+    search_query.replace(QRegularExpression("<search term>"), tag_list[0]);
+
+qDebug() << "#####" << search_query;
+QSqlQuery q;
+if (!q.exec(search_query))
+{
+    DisplayWarningMessage("Cannot get items for tag "+tag_list[0]+" "+q.lastError().text());
+}
+*/
+    QString search_tag = tag_list[0];
+    //search_tag.remove(QChar('\"'), Qt::CaseInsensitive);
+//qDebug() << "#####" << search_tag;
+    int tag_id = getIDFromTagQuery(search_tag);
+    if(tag_id < 0)
+    {
+        qDebug() << "Cannot get tag id for tag "+search_tag;
+    }
+    else
+    {
+        QVector<BooruTypeItem> items;
+        if(!getItemsFromTagQuery(tag_id, items))
+        {
+            DisplayWarningMessage("Cannot get item for tag "+search_tag);
+        }
+        else
+        {
+            for(int i = 0; i < items.count(); ++i)
+            {
+                qDebug() << "Got item "+items[i].path;
+            }
+        }
+    }
     // Auto-select first item in list if it exists
     QModelIndex start = proxyModel->index(0,0);
 
@@ -267,7 +276,7 @@ bool BooruMenu::LoadFile(QFileInfo info)
             }
         }
         item->setIcon(QIcon(QPixmap::fromImage(image)));
-        item_data.sql_id = addItem(item_data.type, item_data.path);
+        item_data.sql_id = addItemQuery(item_data.type, item_data.path);
         item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
     else

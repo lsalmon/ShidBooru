@@ -14,6 +14,7 @@ SOURCES += \
     ItemEditor.cpp \
     ItemEditorDelegate.cpp \
     MainMenu.cpp \
+    QSqlQueryHelper.cpp \
     SearchTagDialog.cpp \
     SelectFilesDialog.cpp \
     main.cpp
@@ -25,6 +26,7 @@ HEADERS += \
     ItemEditor.h \
     ItemEditorDelegate.h \
     MainMenu.h \
+    QSqlQueryHelper.h \
     SearchTagDialog.h \
     SelectFilesDialog.h \
     TagFilterProxyModel.h
