@@ -314,7 +314,6 @@ void BooruMenu::viewClickedItemTag(const QModelIndex& idx)
 {
     QVariant item_var = idx.data(Qt::UserRole);
     BooruTypeItem item_data = item_var.value<BooruTypeItem>();
-    auto tags = item_data.tags;
     // Update list of tags in model
     SyncItemTag(item_data.sql_id);
 }

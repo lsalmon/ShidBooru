@@ -17,7 +17,6 @@ typedef enum {
 struct BooruTypeItem {
     QPixmap picture;
     QByteArray gif;
-    QStringList tags;
     itemType type;
     QString extension;
     QString path;
@@ -27,10 +26,9 @@ struct BooruTypeItem {
     {
     }
 */
-    BooruTypeItem(QPixmap _picture = QPixmap(), QByteArray _gif = QByteArray(), QStringList _tags = QStringList(), itemType _type = STILL_IMG, QString _extension = "", QString _path = "", QVariant _sql_id = QVariant()) :
+    BooruTypeItem(QPixmap _picture = QPixmap(), QByteArray _gif = QByteArray(), itemType _type = STILL_IMG, QString _extension = "", QString _path = "", QVariant _sql_id = QVariant()) :
         picture(_picture),
         gif(_gif),
-        tags(_tags),
         type(_type),
         extension(_extension),
         path(_path),
@@ -40,7 +38,6 @@ struct BooruTypeItem {
     BooruTypeItem(const BooruTypeItem& type_item) :
         picture(type_item.picture),
         gif(type_item.gif),
-        tags(type_item.tags),
         type(type_item.type),
         extension(type_item.extension),
         path(type_item.path),
