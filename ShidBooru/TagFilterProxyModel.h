@@ -3,15 +3,17 @@
 
 #include <QSortFilterProxyModel>
 #include <QStringList>
+#include <QVector>
+#include "QSqlQueryHelper.h"
 #include "BooruItemType.h"
 
 class TagFilterProxyModel : public QSortFilterProxyModel {
 public:
     TagFilterProxyModel(QObject* parent = nullptr) : QSortFilterProxyModel(parent) {}
 
-    void setSearchTag(const QStringList tags, bool enable = false)
+    void setSqlIDFilter(const QVector<int> itemSqlIDs, bool enable = false)
     {
-        searchTags = tags;
+        databaseIDs = itemSqlIDs;
         searching = enable;
         invalidateFilter();
     }
@@ -26,21 +28,12 @@ protected:
         QVariant item_var = index.data(Qt::UserRole);
         BooruTypeItem item_data = item_var.value<BooruTypeItem>();
 
-        // Search in list of tags inside item
-        for(const QString& tag : item_data.tags)
-        {
-            for(const QString& ref : searchTags)
-            {
-                if(tag.contains(ref)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        // Test if the item corresponds to the ID in the links database
+        return databaseIDs.contains(item_data.sql_id.toInt());
     }
 
 private:
-    QStringList searchTags;
+    QVector<int> databaseIDs;
     bool searching = false;
 };
 

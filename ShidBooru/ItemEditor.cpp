@@ -31,8 +31,18 @@ ItemEditor::ItemEditor(QWidget *parent,
     this->adjustSize();
 
     ui->tagListView->setModel(&default_tag_model);
+
     // Set tags to a model inside the dialog box and update the QStringList of the model
-    this->default_tag_model.setStringList(item->tags);
+    QStringList tags_list;
+qDebug() << "AAAAAAAAAAAAAAAAA";
+    getTagsFromItemQuery(item->sql_id.toInt(), tags_list);
+    this->default_tag_model.setStringList(tags_list);
+qDebug() << "BBBBBBBBBBBBBBBBB";
+    for(const QString &tag : tags_list)
+    {
+        qDebug() << "=====> tags for item "+item->sql_id.toString()+" : "+tag;
+    }
+qDebug() << "CCCCCCCCCCCCCCCCCC";
 
     connect(ui->addButton, &QPushButton::clicked, this, &ItemEditor::AddTag);
     connect(ui->removeButton, &QPushButton::clicked, this, &ItemEditor::RemoveSelectedTag);
@@ -62,10 +72,13 @@ void ItemEditor::AddTag()
                 if(id_tag < 0) {
                     id_tag = addTagQuery(tag).toInt();
                     qDebug() << "New tag id " << id_tag;
+                } else {
+                    id_tag = getIDFromTagQuery(tag);
+                    qDebug() << "Got existing tag id " << id_tag;
                 }
                 int id_link = checkDuplicateLinkQuery(QVariant(id_tag), item->sql_id);
                 if(id_link < 0) {
-                    qDebug() << "New link id " << QString(id_tag) << item->sql_id.toString();
+                    qDebug() << "New link id (tag -> item) " << QString(id_tag) << " -> " << item->sql_id.toString();
                     addLinkQuery(item->sql_id, QVariant(id_tag));
                 }
                 this->ui->tagLineEdit->clear();

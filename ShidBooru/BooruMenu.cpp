@@ -165,10 +165,9 @@ void BooruMenu::removeImage(void)
 void BooruMenu::searchImage(QString tags)
 {
     QStringList tag_list = tags.split(" ", Qt::SkipEmptyParts);
-    proxyModel->setSearchTag(tag_list, true);
 
 /*
-    QString search_query(GET_ITEMS_FROM_TAG_SQL);
+    QString search_query(GET_ITEMS_FOR_TAG_SQL);
     search_query.replace(QRegularExpression("<search term>"), tag_list[0]);
 
 qDebug() << "#####" << search_query;
@@ -179,12 +178,14 @@ if (!q.exec(search_query))
 }
 */
     QString search_tag = tag_list[0];
+    QVector<int> sql_id_list;
     //search_tag.remove(QChar('\"'), Qt::CaseInsensitive);
 //qDebug() << "#####" << search_tag;
     int tag_id = getIDFromTagQuery(search_tag);
     if(tag_id < 0)
     {
         qDebug() << "Cannot get tag id for tag "+search_tag;
+        return ;
     }
     else
     {
@@ -192,15 +193,19 @@ if (!q.exec(search_query))
         if(!getItemsFromTagQuery(tag_id, items))
         {
             DisplayWarningMessage("Cannot get item for tag "+search_tag);
+            return ;
         }
         else
         {
             for(int i = 0; i < items.count(); ++i)
             {
-                qDebug() << "Got item "+items[i].path;
+                qDebug() << "For search tag "+search_tag+" --> got item "+items[i].path+" ID item "+items[i].sql_id.toString();
+                sql_id_list.push_back(items[i].sql_id.toInt());
             }
         }
     }
+    proxyModel->setSqlIDFilter(sql_id_list, true);
+
     // Auto-select first item in list if it exists
     QModelIndex start = proxyModel->index(0,0);
 
@@ -214,13 +219,13 @@ if (!q.exec(search_query))
 void BooruMenu::searchImageFinished(bool res)
 {
     Q_UNUSED(res);
-    proxyModel->setSearchTag(QStringList(""), false);
+    proxyModel->setSqlIDFilter(QVector<int>(), false);
     searchInProgress = false;
 }
 
 void BooruMenu::resetSearchImage(void)
 {
-    proxyModel->setSearchTag(QStringList(""), false);
+    proxyModel->setSqlIDFilter(QVector<int>(), false);
     searchInProgress = false;
 }
 

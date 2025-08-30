@@ -50,27 +50,20 @@ bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector)
 {
     QSqlQuery q;
     QVariant bind_val(tag_id);
-    q.prepare(GET_ITEMS_FROM_TAG_SQL);
+    q.prepare(GET_ITEMS_FOR_TAG_SQL);
     q.addBindValue(bind_val);
     if(q.exec())
     {
-/*
-        if(q.first())
+        while(q.next())
         {
+            BooruTypeItem item;
             int item_id = q.value(0).toInt();
-            QString item_path = q.value(2).toString();
-            qDebug() << "Found item "+QString(item_id)+"  "+item_path+" for tag "+QString(tag_id);
-*/
-            while(q.next())
-            {
-                BooruTypeItem item;
-                int item_id = q.value(0).toInt();
-                item.type = itemType(q.value(1).toInt());
-                item.path = q.value(2).toString();
-                //qDebug() << "Found item "+QString(item_id)+"  "+item.path+" for tag "+QString(tag_id);
-                item_vector.push_back(item);
-            }
-//        }
+            item.sql_id = item_id;
+            item.type = itemType(q.value(1).toInt());
+            item.path = q.value(2).toString();
+            //qDebug() << "Found item "+QString(item_id)+"  "+item.path+" for tag "+QString(tag_id);
+            item_vector.push_back(item);
+        }
         return true;
     }
     else
@@ -105,7 +98,7 @@ bool getItemFromIDQuery(int id_item, BooruTypeItem &item)
                     item.gif = file.readAll();
                 }
             }
-            qDebug() << "Got item type "+QString(item.type)+"  path  "+item.path+" for id_item "+QString(id_item);
+            //qDebug() << "Got item type "+QString(item.type)+"  path  "+item.path+" for id_item "+QString(id_item);
             return true;
         }
     }
@@ -118,6 +111,35 @@ bool getItemFromIDQuery(int id_item, BooruTypeItem &item)
     return false;
 }
 
+bool getTagsFromItemQuery(int item_id, QStringList &tags_list)
+{
+    QSqlQuery q;
+    QVariant bind_val(item_id);
+    q.prepare(GET_ITEMS_FOR_TAG_SQL);
+    q.addBindValue(bind_val);
+    if(q.exec())
+    {
+        if(q.first())
+        {
+            qDebug() << "YYYYYYYYYYYYYYY";
+        }
+        qDebug() << "_____> Query passed for item "+QString(item_id);
+        while(q.next())
+        {
+            QString tag_string = q.value(1).toString();
+            qDebug() << "Found tag "+tag_string+" for item "+QString(item_id);
+            tags_list << tag_string << " ";
+        }
+    qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str() << "     " << q.value(0) << q.value(1);
+        return true;
+    }
+    else
+    {
+        qDebug() << "Failed to get tag from item id "+QString(item_id);
+    }
+    qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str() << "     " << q.value(0) << q.value(1);
+    return false;
+}
 
 QVariant addTagQuery(const QString &tag)
 {
