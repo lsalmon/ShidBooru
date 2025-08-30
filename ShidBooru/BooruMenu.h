@@ -49,6 +49,7 @@ private:
     void BrowseFiles(QDir dir);
     bool LoadFile(QFileInfo info);
     bool eventFilter(QObject *obj, QEvent *event);
+    void SyncItemTag(const QVariant &id_item);
     ItemEditor* editor;
     Ui::BooruMenu *ui;
     QString file;

@@ -46,10 +46,10 @@ const auto GET_ITEMS_FOR_TAG_SQL = QLatin1String(R"(
     )");
 
 const auto GET_TAGS_FOR_ITEM_SQL = QLatin1String(R"(
-    SELECT t.id_t, t.tag
-    FROM tags t
-    JOIN links ON t.id_t = links.id_tag
-    WHERE links.id_item = ?
+    SELECT tags.id_t, tags.tag
+    FROM links l
+    JOIN tags ON l.id_tag = tags.id_t
+    WHERE l.id_item = ?
     )");
 
 const auto INSERT_TAG_SQL = QLatin1String(R"(
@@ -77,6 +77,11 @@ const auto REMOVE_TAG_SQL = QLatin1String(R"(
     WHERE tag = ?
     )");
 
+const auto REMOVE_LINK_SQL = QLatin1String(R"(
+    DELETE FROM links
+    WHERE id_item = ? AND id_tag = ?
+    )");
+
 QVariant addItemQuery(int type, const QVariant &path);
 
 int getIDFromTagQuery(const QVariant &tag);
@@ -84,11 +89,13 @@ int getIDFromTagQuery(const QVariant &tag);
 bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector);
 bool getItemFromIDQuery(int id_item, BooruTypeItem &item);
 
-bool getTagsFromItemQuery(int item_id, QStringList &tags_list);
+bool getTagsFromItemQuery(const QVariant &id_item, QStringList &tags_list);
 
 QVariant addTagQuery(const QString &tag);
 bool removeTagQuery(const QString &tag);
+
 void addLinkQuery(const QVariant &id_item, const QVariant &id_tag);
+bool removeLinkQuery(const QVariant &id_item, const QVariant &id_tag);
 
 int checkDuplicateTagQuery(const QString &tag);
 int checkDuplicateLinkQuery(const QVariant &id_tag, const QVariant &id_item);

@@ -19,7 +19,6 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file) :
 {
     ui->setupUi(this);
 
-qDebug() << QSqlDatabase::drivers();
     db = QSqlDatabase::addDatabase("QSQLITE");
     //db.setDatabaseName("BooruInstance");
     // Store table in RAM
@@ -166,21 +165,9 @@ void BooruMenu::searchImage(QString tags)
 {
     QStringList tag_list = tags.split(" ", Qt::SkipEmptyParts);
 
-/*
-    QString search_query(GET_ITEMS_FOR_TAG_SQL);
-    search_query.replace(QRegularExpression("<search term>"), tag_list[0]);
-
-qDebug() << "#####" << search_query;
-QSqlQuery q;
-if (!q.exec(search_query))
-{
-    DisplayWarningMessage("Cannot get items for tag "+tag_list[0]+" "+q.lastError().text());
-}
-*/
     QString search_tag = tag_list[0];
     QVector<int> sql_id_list;
-    //search_tag.remove(QChar('\"'), Qt::CaseInsensitive);
-//qDebug() << "#####" << search_tag;
+
     int tag_id = getIDFromTagQuery(search_tag);
     if(tag_id < 0)
     {
@@ -316,12 +303,20 @@ bool BooruMenu::eventFilter(QObject *obj, QEvent *event)
     return false;
 }
 
+void BooruMenu::SyncItemTag(const QVariant &id_item)
+{
+    QStringList tags_list;
+    getTagsFromItemQuery(id_item, tags_list);
+    tagModel.setStringList(tags_list);
+}
+
 void BooruMenu::viewClickedItemTag(const QModelIndex& idx)
 {
     QVariant item_var = idx.data(Qt::UserRole);
     BooruTypeItem item_data = item_var.value<BooruTypeItem>();
     auto tags = item_data.tags;
-    tagModel.setStringList(tags);
+    // Update list of tags in model
+    SyncItemTag(item_data.sql_id);
 }
 
 void BooruMenu::viewDoubleClickedItem(const QModelIndex& idx)
@@ -348,23 +343,10 @@ void BooruMenu::getUpdatedTagList(int state)
     {
         QModelIndex idx_proxy = this->ui->listViewFiles->currentIndex();
         QModelIndex idx = proxyModel->mapToSource(idx_proxy);
-        QStringList tags = editor->GetUpdatedTags();
         QVariant item_var = idx.data(Qt::UserRole);
         BooruTypeItem item_data = item_var.value<BooruTypeItem>();
 
-        // Update list of tags inside item
-        item_data.tags = tags;
-        QStandardItem* item = model.itemFromIndex(idx);
-        if(item == nullptr) {
-            QMessageBox warning_item_missing;
-            warning_item_missing.setIcon(QMessageBox::Warning);
-            warning_item_missing.setText("Could not find the item");
-            warning_item_missing.exec();
-        } else {
-            // Update list of tags for item on main menu right after edition
-            tagModel.setStringList(tags);
-
-            item->setData(QVariant::fromValue(item_data), Qt::UserRole);
-        }
+        // Update list of tags in model
+        SyncItemTag(item_data.sql_id);
     }
 }

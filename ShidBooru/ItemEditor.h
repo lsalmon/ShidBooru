@@ -29,7 +29,6 @@ class ItemEditor : public QDialog
 public:
     explicit ItemEditor(QWidget *parent = nullptr,
                         BooruTypeItem *_item = nullptr);
-    QStringList GetUpdatedTags();
     ~ItemEditor();
 
 private slots:

@@ -74,12 +74,11 @@ bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector)
     return false;
 }
 
-bool getItemFromIDQuery(int id_item, BooruTypeItem &item)
+bool getItemFromIDQuery(const QVariant &id_item, BooruTypeItem &item)
 {
     QSqlQuery q;
-    QVariant bind_val(id_item);
     q.prepare(GET_ITEM_FROM_ID_SQL);
-    q.addBindValue(bind_val);
+    q.addBindValue(id_item);
     if(q.exec())
     {
         if(q.first())
@@ -104,38 +103,32 @@ bool getItemFromIDQuery(int id_item, BooruTypeItem &item)
     }
     else
     {
-        qDebug() << "Failed to get item from id_item "+QString(id_item);
+        qDebug() << "Failed to get item from id_item "+QString(id_item.toInt());
     }
     qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str() << "     " << q.value(0) << q.value(1);
     
     return false;
 }
 
-bool getTagsFromItemQuery(int item_id, QStringList &tags_list)
+bool getTagsFromItemQuery(const QVariant &id_item, QStringList &tags_list)
 {
     QSqlQuery q;
-    QVariant bind_val(item_id);
-    q.prepare(GET_ITEMS_FOR_TAG_SQL);
-    q.addBindValue(bind_val);
+    q.prepare(GET_TAGS_FOR_ITEM_SQL);
+    q.addBindValue(id_item);
     if(q.exec())
     {
-        if(q.first())
-        {
-            qDebug() << "YYYYYYYYYYYYYYY";
-        }
-        qDebug() << "_____> Query passed for item "+QString(item_id);
         while(q.next())
         {
             QString tag_string = q.value(1).toString();
-            qDebug() << "Found tag "+tag_string+" for item "+QString(item_id);
-            tags_list << tag_string << " ";
+            qDebug() << "Found tag "+tag_string+" for item "+QString(id_item.toInt());
+            tags_list.append(tag_string);
         }
     qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str() << "     " << q.value(0) << q.value(1);
         return true;
     }
     else
     {
-        qDebug() << "Failed to get tag from item id "+QString(item_id);
+        qDebug() << "Failed to get tag from item id "+QString(id_item.toInt());
     }
     qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str() << "     " << q.value(0) << q.value(1);
     return false;
@@ -183,6 +176,24 @@ void addLinkQuery(const QVariant &id_item, const QVariant &id_tag)
     q.addBindValue(id_tag);
     q.exec();
 qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str() << "     " << q.value(0) << q.value(1);
+}
+
+bool removeLinkQuery(const QVariant &id_item, const QVariant &id_tag)
+{
+    QSqlQuery q;
+    q.prepare(REMOVE_LINK_SQL);
+    q.addBindValue(id_item);
+    q.addBindValue(id_tag);
+    if(q.exec())
+    {
+        qDebug() << "Removed link "+QString(id_item.toInt())+" -> "+QString(id_tag.toInt());
+        return true;
+    }
+    else
+    {
+        qDebug() << "Failed to remove link "+QString(id_item.toInt())+" -> "+QString(id_tag.toInt());
+    }
+    return false;
 }
 
 int checkDuplicateTagQuery(const QString &tag)
