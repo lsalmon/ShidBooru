@@ -12,6 +12,7 @@
 #include <QAction>
 #include <QBuffer>
 #include <QMovie>
+#include <QScreen>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>

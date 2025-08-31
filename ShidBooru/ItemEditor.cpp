@@ -13,8 +13,7 @@ ItemEditor::ItemEditor(QWidget *parent,
 {
     db = QSqlDatabase::database();
     ui->setupUi(this);
-    ui->horizontalLayout->setSizeConstraint(QLayout::SetFixedSize);
-    ui->picture->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
     if(item->type == GIF)
     {
         QBuffer *buf = new QBuffer(&item->gif);
@@ -28,11 +27,26 @@ ItemEditor::ItemEditor(QWidget *parent,
         ui->picture->setPixmap(item->picture);
     }
 
-    this->adjustSize();
+    // Fixed size, use hint size and cap it to 70% of the screen size
+    QScreen *main_screen = this->screen();
+    QSize hint_size = this->sizeHint();
+    QRect avail = main_screen->availableGeometry();
+    QSize avail_size = avail.size();
 
-    ui->tagListView->setModel(&default_tag_model);
+    ui->picture->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    ui->picture->setScaledContents(true);
+
+    if(hint_size.height() > 0.7*avail_size.height()
+        || hint_size.width() > 0.7*avail_size.width())
+    {
+        hint_size.setHeight(0.7*avail_size.height());
+        hint_size.setWidth(0.7*avail_size.width());
+    }
+    ui->picture->setFixedSize(hint_size);
 
     // Set tags to a model inside the dialog box and update the QStringList of the model
+    ui->tagListView->setModel(&default_tag_model);
+
     QStringList tags_list;
     getTagsFromItemQuery(item->sql_id, tags_list);
     this->default_tag_model.setStringList(tags_list);
