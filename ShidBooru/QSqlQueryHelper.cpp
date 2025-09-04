@@ -134,6 +134,23 @@ bool getTagsFromItemQuery(const QVariant &id_item, QStringList &tags_list)
     return false;
 }
 
+bool removeItemQuery(const QVariant &id_item)
+{
+    QSqlQuery q;
+    q.prepare(REMOVE_ITEM_SQL);
+    q.addBindValue(id_item);
+    if(q.exec())
+    {
+        qDebug() << "Removed item " << QString(id_item.toInt());
+        return true;
+    }
+    else
+    {
+        qDebug() << "Failed to remove item " << QString(id_item.toInt()) << " " << q.lastError().text() << " " << q.executedQuery() << "   " <<q.boundValue(0).toString();
+    }
+    return false;
+}
+
 QVariant addTagQuery(const QString &tag)
 {
     QSqlQuery q;
@@ -162,8 +179,7 @@ bool removeTagQuery(const QString &tag)
     }
     else
     {
-        qDebug() << "Failed to remove tag "+tag;
-qDebug() << "Cannot get items for tag "+tag+" "+q.lastError().text()+" "+q.executedQuery()+"   "+q.boundValue(0).toString();
+        qDebug() << "Failed to remove tag "+tag+" "+q.lastError().text()+" "+q.executedQuery()+"   "+q.boundValue(0).toString();
     }
     return false;
 }

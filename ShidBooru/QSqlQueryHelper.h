@@ -72,6 +72,11 @@ const auto CHECK_LINK_EXISTENCE_SQL = QLatin1String(R"(
     WHERE l.id_tag = ? AND l.id_item = ?
     )");
 
+const auto REMOVE_ITEM_SQL = QLatin1String(R"(
+    DELETE FROM items
+    WHERE id_i = ?
+    )");
+
 const auto REMOVE_TAG_SQL = QLatin1String(R"(
     DELETE FROM tags
     WHERE tag = ?
@@ -90,6 +95,8 @@ bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector);
 bool getItemFromIDQuery(int id_item, BooruTypeItem &item);
 
 bool getTagsFromItemQuery(const QVariant &id_item, QStringList &tags_list);
+
+bool removeItemQuery(const QVariant &id_item);
 
 QVariant addTagQuery(const QString &tag);
 bool removeTagQuery(const QString &tag);

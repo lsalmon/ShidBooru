@@ -154,10 +154,49 @@ void BooruMenu::removeImage(void)
 
     QMessageBox::StandardButton confirm = QMessageBox::question(this, "Confirm suppression", "Delete item "+item_desc+" ?", QMessageBox::Yes|QMessageBox::No);
 
-    if(confirm == QMessageBox::Yes && !proxyModel->removeRow(idx.row()))
+    if(confirm == QMessageBox::Yes)
     {
-        warning_item_missing.setText("Could not delete the item "+item_desc);
-        warning_item_missing.exec();
+        QVariant item_var = idx.data(Qt::UserRole);
+        BooruTypeItem item_data = item_var.value<BooruTypeItem>();
+
+        QStringList tags_list;
+
+        getTagsFromItemQuery(item_data.sql_id, tags_list);
+
+        // Remove links to item
+        for(const QString &tag : tags_list)
+        {
+            qDebug() << "Remove item : item " << tag;
+            int id_tag = getIDFromTagQuery(tag);
+            if(id_tag >= 0) {
+                if(removeLinkQuery(item_data.sql_id, id_tag))
+                {
+                    qDebug() << "Remove link from "+QString(item_data.sql_id.toInt())+" to "+id_tag;
+                    // If link was the last to use the tag, also remove tag
+                    QVector<BooruTypeItem> items;
+                    getItemsFromTagQuery(id_tag, items);
+
+                    if(items.empty()) {
+                        qDebug() << "Remove tag "+tag+" completely";
+                        removeTagQuery(tag);
+                    }
+                }
+                else
+                {
+                    qDebug() << "Failed to remove link from "+QString(item_data.sql_id.toInt())+" to "+id_tag;
+                }
+            }
+        }
+
+        // Remove item from db
+        if(!proxyModel->removeRow(idx.row()) || !removeItemQuery(item_data.sql_id)) {
+            warning_item_missing.setText("Could not delete the item "+item_desc);
+            warning_item_missing.exec();
+            return ;
+        }
+
+        // Reset tag window
+        tagModel.setStringList(QStringList());
     }
 }
 
