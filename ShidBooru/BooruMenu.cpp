@@ -294,17 +294,11 @@ bool BooruMenu::LoadFile(QFileInfo info)
         qDebug() << "Load " << info.completeBaseName() << Qt::endl;
         QImage image(info.absoluteFilePath());
         item->setText(info.completeBaseName());
-        item_data.picture = QPixmap::fromImage(image);
         item_data.extension = info.completeSuffix();
         item_data.path = info.absoluteFilePath();
         if(info.completeSuffix() == "gif")
         {
             item_data.type = GIF;
-            QFile file(info.absoluteFilePath());
-            if(file.open(QIODevice::ReadOnly))
-            {
-                item_data.gif = file.readAll();
-            }
         }
         item->setIcon(QIcon(QPixmap::fromImage(image)));
         item_data.sql_id = addItemQuery(item_data.type, item_data.path);

@@ -85,18 +85,6 @@ bool getItemFromIDQuery(const QVariant &id_item, BooruTypeItem &item)
         {
             item.type = itemType(q.value(0).toInt());
             item.path = q.value(1).toString();
-
-            QImage image(item.path);
-            item.picture = QPixmap::fromImage(image);
-
-            if(item.type == GIF)
-            {
-                QFile file(item.path);
-                if(file.open(QIODevice::ReadOnly))
-                {
-                    item.gif = file.readAll();
-                }
-            }
             //qDebug() << "Got item type "+QString(item.type)+"  path  "+item.path+" for id_item "+QString(id_item);
             return true;
         }

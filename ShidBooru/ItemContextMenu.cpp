@@ -14,13 +14,21 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
         QClipboard *clipboard = QGuiApplication::clipboard();
         if(item_data->type == GIF)
         {
-            QMimeData *mimeData = new QMimeData();
-            mimeData->setData("image/gif", item_data->gif);
-            clipboard->setMimeData(mimeData);
+            QByteArray gif;
+            QFile file(item_data->path);
+            if(file.open(QIODevice::ReadOnly))
+            {
+                gif = file.readAll();
+                QMimeData *mimeData = new QMimeData();
+                mimeData->setData("image/gif", gif);
+                clipboard->setMimeData(mimeData);
+            }
         }
         else
         {
-            clipboard->setPixmap(item_data->picture);
+            QImage image(item_data->path);
+            QPixmap picture = QPixmap::fromImage(image);
+            clipboard->setPixmap(picture);
         }
     }
     else if(selected == save)
@@ -42,13 +50,28 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
                 QFile save_file(file_path);
                 if(save_file.open(QIODevice::WriteOnly))
                 {
-                    save_file.write(item_data->gif);
+                    QByteArray gif;
+                    QFile file(item_data->path);
+                    if(file.open(QIODevice::ReadOnly))
+                    {
+                        gif = file.readAll();
+                        save_file.write(gif);
+                    }
+                    else
+                    {
+                        QMessageBox warning_item_missing;
+                        warning_item_missing.setIcon(QMessageBox::Warning);
+                        warning_item_missing.setText("Failed to save "+file_path+'.'+item_data->extension);
+                        warning_item_missing.exec();
+                    }
                     save_file.close();
                 }
             }
             else
             {
-                if(!item_data->picture.save(file_path+'.'+item_data->extension, item_data->extension.toUpper().toUtf8().constData()))
+                QImage image(item_data->path);
+                QPixmap picture = QPixmap::fromImage(image);
+                if(!picture.save(file_path+'.'+item_data->extension, item_data->extension.toUpper().toUtf8().constData()))
                 {
                     QMessageBox warning_item_missing;
                     warning_item_missing.setIcon(QMessageBox::Warning);

@@ -40,6 +40,9 @@ private:
     BooruTypeItem *item;
     QStringListModel default_tag_model;
     Ui::ItemEditor *ui;
+    QByteArray gif;
+    QBuffer *buf;
+    QMovie *gif_movie;
 
 protected:
     void mousePressEvent(QMouseEvent* event);

@@ -16,15 +16,22 @@ ItemEditor::ItemEditor(QWidget *parent,
 
     if(item->type == GIF)
     {
-        QBuffer *buf = new QBuffer(&item->gif);
-        buf->open(QIODevice::ReadOnly);
-        QMovie *gif_movie = new QMovie(buf, QByteArray(), this);
-        ui->picture->setMovie(gif_movie);
-        gif_movie->start();
+        QFile file(item->path);
+        if(file.open(QIODevice::ReadOnly))
+        {
+            gif = file.readAll();
+            buf = new QBuffer(&gif);
+            buf->open(QIODevice::ReadOnly);
+            gif_movie = new QMovie(buf, QByteArray(), this);
+            ui->picture->setMovie(gif_movie);
+            gif_movie->start();
+        }
     }
     else
     {
-        ui->picture->setPixmap(item->picture);
+        QImage image(item->path);
+        QPixmap picture = QPixmap::fromImage(image);
+        ui->picture->setPixmap(picture);
     }
 
     // Fixed size, use hint size and cap it to 70% of the screen size
@@ -145,5 +152,11 @@ void ItemEditor::mousePressEvent(QMouseEvent *event)
 
 ItemEditor::~ItemEditor()
 {
+    ui->picture->clear();
+    if(item->type == GIF)
+    {
+        delete(gif_movie);
+        delete(buf);
+    }
     delete ui;
 }
