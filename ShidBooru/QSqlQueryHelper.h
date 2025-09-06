@@ -87,6 +87,10 @@ const auto REMOVE_LINK_SQL = QLatin1String(R"(
     WHERE id_item = ? AND id_tag = ?
     )");
 
+const auto DUMP_TO_FILE = QLatin1String(R"(
+    VACUUM INTO ?
+    )");
+
 QVariant addItemQuery(int type, const QVariant &path);
 
 int getIDFromTagQuery(const QVariant &tag);

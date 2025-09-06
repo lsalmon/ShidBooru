@@ -22,6 +22,7 @@ SOURCES += \
 HEADERS += \
     BooruItemType.h \
     BooruMenu.h \
+    HelperFunctions.h \
     ItemContextMenu.h \
     ItemEditor.h \
     ItemEditorDelegate.h \

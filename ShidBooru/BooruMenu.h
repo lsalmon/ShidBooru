@@ -10,7 +10,6 @@
 #include <QStandardItemModel>
 #include <QStringListModel>
 #include <QInputDialog>
-#include <QMessageBox>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -21,6 +20,7 @@
 #include "SearchTagDialog.h"
 #include "SelectFilesDialog.h"
 #include "ItemContextMenu.h"
+#include "HelperFunctions.h"
 
 namespace Ui {
 class BooruMenu;
@@ -44,6 +44,7 @@ private slots:
     void searchImage(QString tags);
     void resetSearchImage(void);
     void searchImageFinished(bool res);
+    void exportToBooruFile(void);
 
 private:
     void BrowseFiles(QDir dir);
@@ -57,12 +58,6 @@ private:
     TagFilterProxyModel *proxyModel;
     QStringListModel tagModel;
     bool searchInProgress = false;
-    static inline void DisplayWarningMessage(QString message) {
-        QMessageBox warning_item_missing;
-        warning_item_missing.setIcon(QMessageBox::Warning);
-        warning_item_missing.setText(message);
-        warning_item_missing.exec();
-    }
 };
 
 #endif // BOORUMENU_H

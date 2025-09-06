@@ -94,6 +94,9 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file) :
         if(item->text() == "Remove Image") {
             connect(item, &QAction::triggered, this, &BooruMenu::removeImage);
         }
+        if(item->text() == "Export to Booru File") {
+            connect(item, &QAction::triggered, this, &BooruMenu::exportToBooruFile);
+        }
     }
 
     connect(ui->listViewFiles, &QListView::clicked, this, &BooruMenu::viewClickedItemTag);
@@ -140,13 +143,10 @@ void BooruMenu::removeImage(void)
     QModelIndex idx_proxy = this->ui->listViewFiles->currentIndex();
     QModelIndex idx = proxyModel->mapToSource(idx_proxy);
     QString item_desc = idx.data().toString();
-    QMessageBox warning_item_missing;
-    warning_item_missing.setIcon(QMessageBox::Warning);
 
     if(!idx.isValid())
     {
-        warning_item_missing.setText("Could not find the item "+item_desc);
-        warning_item_missing.exec();
+        DisplayWarningMessage("Could not find the item "+item_desc);
     }
 
     QMessageBox::StandardButton confirm = QMessageBox::question(this, "Confirm suppression", "Delete item "+item_desc+" ?", QMessageBox::Yes|QMessageBox::No);
@@ -187,8 +187,7 @@ void BooruMenu::removeImage(void)
 
         // Remove item from db
         if(!proxyModel->removeRow(idx.row()) || !removeItemQuery(item_data.sql_id)) {
-            warning_item_missing.setText("Could not delete the item "+item_desc);
-            warning_item_missing.exec();
+            DisplayWarningMessage("Could not delete the item "+item_desc);
             return ;
         }
 
@@ -250,6 +249,26 @@ void BooruMenu::resetSearchImage(void)
 {
     proxyModel->setSqlIDFilter(QVector<int>(), false);
     searchInProgress = false;
+}
+
+void BooruMenu::exportToBooruFile(void)
+{
+    QString file_path = QFileDialog::getSaveFileName(this, "Export DB", QDir::homePath(), "SQLite Database (*.sqlite)");
+    if(!file_path.isEmpty())
+    {
+        QSqlQuery q;
+        q.prepare(DUMP_TO_FILE);
+        q.addBindValue(QVariant(file_path));
+        if(q.exec())
+        {
+            DisplayWarningMessage("Exported db to "+file_path);
+
+        }
+        else
+        {
+            DisplayWarningMessage("Failed to export db to "+file_path);
+        }
+    }
 }
 
 BooruMenu::~BooruMenu()

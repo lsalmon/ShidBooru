@@ -8,6 +8,7 @@
 #include <QMimeData>
 #include <QMessageBox>
 #include "BooruItemType.h"
+#include "HelperFunctions.h"
 
 class ItemContextMenu : public QMenu
 {

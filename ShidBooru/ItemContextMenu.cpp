@@ -59,10 +59,7 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
                     }
                     else
                     {
-                        QMessageBox warning_item_missing;
-                        warning_item_missing.setIcon(QMessageBox::Warning);
-                        warning_item_missing.setText("Failed to save "+file_path+'.'+item_data->extension);
-                        warning_item_missing.exec();
+                        DisplayWarningMessage("Failed to save "+file_path+'.'+item_data->extension);
                     }
                     save_file.close();
                 }
@@ -73,10 +70,7 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
                 QPixmap picture = QPixmap::fromImage(image);
                 if(!picture.save(file_path+'.'+item_data->extension, item_data->extension.toUpper().toUtf8().constData()))
                 {
-                    QMessageBox warning_item_missing;
-                    warning_item_missing.setIcon(QMessageBox::Warning);
-                    warning_item_missing.setText("Failed to save "+file_path+'.'+item_data->extension);
-                    warning_item_missing.exec();
+                    DisplayWarningMessage("Failed to save "+file_path+'.'+item_data->extension);
                 }
             }
         }

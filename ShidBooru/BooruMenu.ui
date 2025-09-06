@@ -47,6 +47,7 @@
    <addaction name="actionAdd_Image"/>
    <addaction name="actionRemove_Image"/>
    <addaction name="actionFind_Image"/>
+   <addaction name="actionExport_to_Booru_File"/>
   </widget>
   <action name="actionAdd_Image">
    <property name="text">
@@ -61,6 +62,14 @@
   <action name="actionFind_Image">
    <property name="text">
     <string>Find Image</string>
+   </property>
+  </action>
+  <action name="actionExport_to_Booru_File">
+   <property name="text">
+    <string>Export to Booru File</string>
+   </property>
+   <property name="toolTip">
+    <string>Export to Booru File</string>
    </property>
   </action>
  </widget>
