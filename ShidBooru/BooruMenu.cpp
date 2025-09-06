@@ -9,7 +9,7 @@ static void removeDb()
 {
     db.close();
     QSqlDatabase::removeDatabase("qt_sql_default_connection");
-qDebug() << "DB removed";
+    qDebug() << "DB removed";
 }
 
 BooruMenu::BooruMenu(QWidget *parent, QString _file) :
@@ -20,7 +20,6 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file) :
     ui->setupUi(this);
 
     db = QSqlDatabase::addDatabase("QSQLITE");
-    //db.setDatabaseName("BooruInstance");
     // Store table in RAM
     db.setDatabaseName(":memory:");
 
@@ -31,8 +30,8 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file) :
     }
 
     // Support for foreign keys
-    QSqlQuery setup;
-    setup.exec("PRAGMA foreign_keys = ON;");
+    QSqlQuery q;
+    q.exec("PRAGMA foreign_keys = ON;");
 
     QStringList tables = db.tables();
     if (tables.contains("items", Qt::CaseInsensitive)
@@ -44,7 +43,6 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file) :
         return ;
     }
 
-    QSqlQuery q;
     if (!q.exec(ITEM_SQL))
     {
         DisplayWarningMessage("Creating Item table failed with "+q.lastError().text());
@@ -76,7 +74,6 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file) :
     }
 
     proxyModel = new TagFilterProxyModel(this);
-    //proxyModel->setFilterRole(Qt::UserRole);
     proxyModel->setSourceModel(&model);
 
     ui->listViewFiles->setModel(proxyModel);

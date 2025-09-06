@@ -19,11 +19,7 @@ struct BooruTypeItem {
     QString extension;
     QString path;
     QVariant sql_id;
-/*
-    BooruTypeItem()
-    {
-    }
-*/
+
     BooruTypeItem(itemType _type = STILL_IMG, QString _extension = "", QString _path = "", QVariant _sql_id = QVariant()) :
         type(_type),
         extension(_extension),

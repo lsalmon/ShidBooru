@@ -57,10 +57,6 @@ ItemEditor::ItemEditor(QWidget *parent,
     QStringList tags_list;
     getTagsFromItemQuery(item->sql_id, tags_list);
     this->default_tag_model.setStringList(tags_list);
-    for(const QString &tag : tags_list)
-    {
-        qDebug() << "=====> tags for item "+item->sql_id.toString()+" : "+tag;
-    }
 
     connect(ui->addButton, &QPushButton::clicked, this, &ItemEditor::AddTag);
     connect(ui->removeButton, &QPushButton::clicked, this, &ItemEditor::RemoveSelectedTag);
