@@ -9,6 +9,7 @@ MainMenu::MainMenu(QWidget *parent)
     ui->setupUi(this);
 
     connect(ui->CreateBooruButton, &QPushButton::clicked, this, &MainMenu::onCreateBooruButtonClicked);
+    connect(ui->LoadBooruButton, &QPushButton::clicked, this, &MainMenu::onLoadBooruButtonClicked);
 }
 
 MainMenu::~MainMenu()
@@ -29,8 +30,25 @@ void MainMenu::onCreateBooruButtonClicked(bool checked)
     SelectFilesDialog dialbox(this);
     if(dialbox.exec() == QDialog::Accepted)
     {
-        BooruMenu* newmenu = new BooruMenu(this, dialbox.selected);
+        BooruMenu* newmenu = new BooruMenu(this, dialbox.selected, CREATE);
         newmenu->setAttribute(Qt::WA_DeleteOnClose);
         newmenu->show();
+    }
+}
+
+void MainMenu::onLoadBooruButtonClicked(bool checked)
+{
+    Q_UNUSED(checked);
+
+    QString file_path = QFileDialog::getOpenFileName(this, "Load database", QDir::homePath(), "SQLite Database (*.sqlite)");
+    if(!file_path.isEmpty() && !file_path.isNull())
+    {
+        BooruMenu* newmenu = new BooruMenu(this, file_path, LOAD);
+        newmenu->setAttribute(Qt::WA_DeleteOnClose);
+        newmenu->show();
+    }
+    else
+    {
+        DisplayInfoMessage("Loading cancelled by user");
     }
 }

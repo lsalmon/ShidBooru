@@ -43,7 +43,7 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
         {
             file_path = QFileDialog::getSaveFileName(this, "Save picture", QDir::homePath(), "Images (*.png *.jpg *.bmp)");
         }
-        if(!file_path.isEmpty())
+        if(!file_path.isEmpty() && !file_path.isNull())
         {
             if(item_data->type == GIF)
             {
@@ -73,6 +73,10 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
                     DisplayWarningMessage("Failed to save "+file_path+'.'+item_data->extension);
                 }
             }
+        }
+        else
+        {
+            DisplayInfoMessage("Save cancelled by user");
         }
     }
 }

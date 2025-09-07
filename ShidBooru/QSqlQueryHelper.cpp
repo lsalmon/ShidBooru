@@ -44,11 +44,10 @@ bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector)
         while(q.next())
         {
             BooruTypeItem item;
-            int item_id = q.value(0).toInt();
-            item.sql_id = item_id;
+            item.sql_id = q.value(0).toInt();
             item.type = itemType(q.value(1).toInt());
             item.path = q.value(2).toString();
-            qDebug() << "Found item "+QString(item_id)+"  "+item.path+" for tag "+QString(tag_id);
+            qDebug() << "Found item "+QString(item.sql_id.toInt())+"  "+item.path+" for tag "+QString(tag_id);
             item_vector.push_back(item);
         }
         return true;
@@ -56,6 +55,30 @@ bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector)
     else
     {
         qDebug() << "Failed to get item from tag id "+QString(tag_id);
+    }
+
+    return false;
+}
+
+bool dumpItemsQuery(QVector<BooruTypeItem> &item_vector)
+{
+    QSqlQuery q;
+    if(q.exec(DUMP_ALL_ITEMS_SQL))
+    {
+        while(q.next())
+        {
+            BooruTypeItem item;
+            item.sql_id = q.value(0).toInt();
+            item.type = itemType(q.value(1).toInt());
+            item.path = q.value(2).toString();
+            qDebug() << "Found item "+QString(item.sql_id.toInt())+"  "+item.path;
+            item_vector.push_back(item);
+        }
+        return true;
+    }
+    else
+    {
+        qDebug() << "Failed to dump items table";
     }
 
     return false;

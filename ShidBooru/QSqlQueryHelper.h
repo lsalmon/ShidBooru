@@ -91,11 +91,17 @@ const auto DUMP_TO_FILE = QLatin1String(R"(
     VACUUM INTO ?
     )");
 
+const auto DUMP_ALL_ITEMS_SQL = QLatin1String(R"(
+    SELECT *
+    FROM items
+    )");
+
 QVariant addItemQuery(int type, const QVariant &path);
 
 int getIDFromTagQuery(const QVariant &tag);
 
 bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector);
+bool dumpItemsQuery(QVector<BooruTypeItem> &item_vector);
 bool getItemFromIDQuery(int id_item, BooruTypeItem &item);
 
 bool getTagsFromItemQuery(const QVariant &id_item, QStringList &tags_list);

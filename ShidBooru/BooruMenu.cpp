@@ -12,67 +12,8 @@ static void removeDb()
     qDebug() << "DB removed";
 }
 
-BooruMenu::BooruMenu(QWidget *parent, QString _file) :
-    QMainWindow(parent),
-    ui(new Ui::BooruMenu),
-    file(_file)
+void BooruMenu::BooruMenuUISetup(void)
 {
-    ui->setupUi(this);
-
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    // Store table in RAM
-    db.setDatabaseName(":memory:");
-
-    if(!db.open())
-    {
-        DisplayWarningMessage("Creating db failed with "+db.lastError().text());
-        return ;
-    }
-
-    // Support for foreign keys
-    QSqlQuery q;
-    q.exec("PRAGMA foreign_keys = ON;");
-
-    QStringList tables = db.tables();
-    if (tables.contains("items", Qt::CaseInsensitive)
-        && tables.contains("tags", Qt::CaseInsensitive)
-        && tables.contains("links", Qt::CaseInsensitive))
-    {
-        DisplayWarningMessage("db is already full, abort");
-        removeDb();
-        return ;
-    }
-
-    if (!q.exec(ITEM_SQL))
-    {
-        DisplayWarningMessage("Creating Item table failed with "+q.lastError().text());
-        removeDb();
-        return ;
-    }
-    if (!q.exec(TAG_SQL))
-    {
-        DisplayWarningMessage("Creating Tag table failed with "+q.lastError().text());
-        removeDb();
-        return ;
-    }
-    if (!q.exec(LINK_SQL))
-    {
-        DisplayWarningMessage("Creating Item<->Tag table failed with "+q.lastError().text());
-        removeDb();
-        return ;
-    }
-
-    // Load items from user directory or from single file
-    QFileInfo fileinfo(file);
-    if(fileinfo.isDir())
-    {
-        BrowseFiles(QDir(file));
-    }
-    else
-    {
-        LoadFile(fileinfo);
-    }
-
     proxyModel = new TagFilterProxyModel(this);
     proxyModel->setSourceModel(&model);
 
@@ -104,6 +45,108 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file) :
     ui->listViewFiles->viewport()->installEventFilter(this);
 }
 
+BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType type) :
+    QMainWindow(parent),
+    ui(new Ui::BooruMenu),
+    file_or_db_path(_file_or_db_path)
+{
+    ui->setupUi(this);
+    db = QSqlDatabase::addDatabase("QSQLITE");
+
+    if(type == CREATE)
+    {
+        // Store table in RAM
+        db.setDatabaseName(":memory:");
+
+        if(!db.open())
+        {
+            DisplayWarningMessage("Creating db failed with "+db.lastError().text());
+            this->close();
+            return ;
+        }
+    }
+    else
+    {
+        // Load database from file
+        db.setDatabaseName(_file_or_db_path);
+
+        if(!db.open())
+        {
+            DisplayWarningMessage("Importing db failed with "+db.lastError().text());
+            this->close();
+            return ;
+        }
+    }
+
+    // Support for foreign keys
+    QSqlQuery q;
+    q.exec("PRAGMA foreign_keys = ON;");
+
+    if(type == CREATE)
+    {
+        QStringList tables = db.tables();
+        if (tables.contains("items", Qt::CaseInsensitive)
+            && tables.contains("tags", Qt::CaseInsensitive)
+            && tables.contains("links", Qt::CaseInsensitive))
+        {
+            DisplayWarningMessage("db is already full, abort");
+            removeDb();
+            this->close();
+            return ;
+        }
+
+        if (!q.exec(ITEM_SQL))
+        {
+            DisplayWarningMessage("Creating Item table failed with "+q.lastError().text());
+            removeDb();
+            this->close();
+            return ;
+        }
+        if (!q.exec(TAG_SQL))
+        {
+            DisplayWarningMessage("Creating Tag table failed with "+q.lastError().text());
+            removeDb();
+            this->close();
+            return ;
+        }
+        if (!q.exec(LINK_SQL))
+        {
+            DisplayWarningMessage("Creating Item<->Tag table failed with "+q.lastError().text());
+            removeDb();
+            this->close();
+            return ;
+        }
+
+        // Load items from user directory or from single file
+        QFileInfo fileinfo(file_or_db_path);
+        if(fileinfo.isDir())
+        {
+            BrowseFiles(QDir(file_or_db_path));
+        }
+        else
+        {
+            LoadFile(fileinfo, -1);
+        }
+    }
+    else
+    {
+        QStringList tables = db.tables();
+        if (!tables.contains("items", Qt::CaseInsensitive)
+            || !tables.contains("tags", Qt::CaseInsensitive)
+            || !tables.contains("links", Qt::CaseInsensitive))
+        {
+            DisplayWarningMessage("db is missing tables, abort");
+            removeDb();
+            this->close();
+            return ;
+        }
+
+        importBooruFromFile();
+    }
+
+    BooruMenuUISetup();
+}
+
 void BooruMenu::findImage(void)
 {
     // If a search window is already there, dont create another
@@ -133,7 +176,7 @@ void BooruMenu::addImage(void)
         }
         else
         {
-            LoadFile(fileinfo);
+            LoadFile(fileinfo, -1);
         }
     }
 }
@@ -254,19 +297,48 @@ void BooruMenu::resetSearchImage(void)
 void BooruMenu::exportToBooruFile(void)
 {
     QString file_path = QFileDialog::getSaveFileName(this, "Export DB", QDir::homePath(), "SQLite Database (*.sqlite)");
-    if(!file_path.isEmpty())
+    if(!file_path.isEmpty() && !file_path.isNull())
     {
+        QFileInfo fileinfo(file_path);
+        // Just force the .sqlite extension along with the abs path
+#ifdef Q_OS_LINUX
+        file_path = fileinfo.absolutePath() + "/" + fileinfo.baseName() + ".sqlite";
+#else
+        file_path = fileinfo.absolutePath() + "\\" + fileinfo.baseName() + ".sqlite";
+#endif
         QSqlQuery q;
         q.prepare(DUMP_TO_FILE);
         q.addBindValue(QVariant(file_path));
         if(q.exec())
         {
-            DisplayWarningMessage("Exported db to "+file_path);
-
+            DisplayInfoMessage("Exported db to "+file_path);
         }
         else
         {
-            DisplayWarningMessage("Failed to export db to "+file_path);
+            DisplayWarningMessage("Failed to export db to "+file_path+" "+db.lastError().text());
+    qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str();
+        }
+    }
+    else
+    {
+        DisplayInfoMessage("Export cancelled by user");
+    }
+}
+
+void BooruMenu::importBooruFromFile(void)
+{
+    QVector<BooruTypeItem> items;
+    if(!dumpItemsQuery(items))
+    {
+        DisplayWarningMessage("Cannot dump items table");
+        return ;
+    }
+    else
+    {
+        for(int i = 0; i < items.count(); ++i)
+        {
+            LoadFile(items[i].path, items[i].sql_id.toInt());
+            qDebug() << "Import item "+items[i].path+" ID item "+items[i].sql_id.toString();
         }
     }
 }
@@ -290,11 +362,11 @@ void BooruMenu::BrowseFiles(QDir dir)
         }
 
         QFileInfo fileinfo(path);
-        LoadFile(path);
+        LoadFile(path, -1);
     }
 }
 
-bool BooruMenu::LoadFile(QFileInfo info)
+bool BooruMenu::LoadFile(QFileInfo info, int item_id)
 {
     QStandardItem* item;
     if(!info.isFile() || !info.exists() || !info.isReadable())
@@ -317,7 +389,14 @@ bool BooruMenu::LoadFile(QFileInfo info)
             item_data.type = GIF;
         }
         item->setIcon(QIcon(QPixmap::fromImage(image)));
-        item_data.sql_id = addItemQuery(item_data.type, item_data.path);
+        if(item_id < 0)
+        {
+            item_data.sql_id = addItemQuery(item_data.type, item_data.path);
+        }
+        else
+        {
+            item_data.sql_id = item_id;
+        }
         item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
     else

@@ -31,7 +31,7 @@ class BooruMenu : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit BooruMenu(QWidget *parent = nullptr, QString _file = "");
+    explicit BooruMenu(QWidget *parent = nullptr, QString _file_or_db_path = "", BooruInitType type = CREATE);
     ~BooruMenu();
 
 private slots:
@@ -47,13 +47,15 @@ private slots:
     void exportToBooruFile(void);
 
 private:
+    void BooruMenuUISetup(void);
     void BrowseFiles(QDir dir);
-    bool LoadFile(QFileInfo info);
+    bool LoadFile(QFileInfo info, int item_id);
     bool eventFilter(QObject *obj, QEvent *event);
     void SyncItemTag(const QVariant &id_item);
+    void importBooruFromFile(void);
     ItemEditor* editor;
     Ui::BooruMenu *ui;
-    QString file;
+    QString file_or_db_path;
     QStandardItemModel model;
     TagFilterProxyModel *proxyModel;
     QStringListModel tagModel;

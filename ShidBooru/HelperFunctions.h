@@ -3,6 +3,11 @@
 
 #include <QMessageBox>
 
+typedef enum BooruInitType {
+    CREATE,
+    LOAD
+} BooruInitType;
+
 static inline void DisplayMessage(QString message, QMessageBox::Icon icon) {
     QMessageBox msg;
     msg.setIcon(icon);

@@ -20,6 +20,7 @@ public:
 
 private slots:
     void onCreateBooruButtonClicked(bool checked = false);
+    void onLoadBooruButtonClicked(bool checked = false);
 
 private:
     Ui::MainMenu *ui;
