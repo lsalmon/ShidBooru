@@ -299,24 +299,33 @@ void BooruMenu::exportToBooruFile(void)
     QString file_path = QFileDialog::getSaveFileName(this, "Export DB", QDir::homePath(), "SQLite Database (*.sqlite)");
     if(!file_path.isEmpty() && !file_path.isNull())
     {
-        QFileInfo fileinfo(file_path);
+        QFileInfo file_info(file_path);
         // Just force the .sqlite extension along with the abs path
 #ifdef Q_OS_LINUX
-        file_path = fileinfo.absolutePath() + "/" + fileinfo.baseName() + ".sqlite";
+        file_path = file_info.absolutePath() + "/" + file_info.baseName() + ".sqlite";
 #else
-        file_path = fileinfo.absolutePath() + "\\" + fileinfo.baseName() + ".sqlite";
+        file_path = file_info.absolutePath() + "\\" + file_info.baseName() + ".sqlite";
 #endif
-        QSqlQuery q;
-        q.prepare(DUMP_TO_FILE);
-        q.addBindValue(QVariant(file_path));
-        if(q.exec())
+        // Disable overwriting file
+        if(QFile::exists(file_path))
         {
-            DisplayInfoMessage("Exported db to "+file_path);
+            DisplayWarningMessage(file_path+" already exists, choose another file");
         }
         else
         {
-            DisplayWarningMessage("Failed to export db to "+file_path+" "+db.lastError().text());
-    qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str();
+            QSqlQuery q;
+            q.prepare(DUMP_TO_FILE);
+            q.addBindValue(QVariant(file_path));
+            if(q.exec())
+            {
+                DisplayInfoMessage("Exported db to "+file_path);
+            }
+            else
+            {
+                DisplayWarningMessage("Failed to export db to "+file_path+" "+db.lastError().text());
+            }
+        qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str();
+            return ;
         }
     }
     else
