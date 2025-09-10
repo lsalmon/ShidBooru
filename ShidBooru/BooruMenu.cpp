@@ -346,6 +346,24 @@ void BooruMenu::importBooruFromFile(void)
     {
         for(int i = 0; i < items.count(); ++i)
         {
+            // If file doesnt exist, ask user for another path
+            if(!QFile::exists(items[i].path))
+            {
+                DisplayWarningMessage(items[i].path+" does not exist, point to another file");
+                QString file_dialog_title("Get new path for ");
+                file_dialog_title += items[i].path;
+
+                QString file = QFileDialog::getOpenFileName(this, tr(file_dialog_title.toStdString().c_str()), QDir().absolutePath());
+                if(file.isEmpty())
+                {
+                    DisplayInfoMessage(items[i].path+" not fixed");
+                }
+                else
+                {
+                    items[i].path = file;
+                }
+            }
+
             LoadFile(items[i].path, items[i].sql_id.toInt());
             qDebug() << "Import item "+items[i].path+" ID item "+items[i].sql_id.toString();
         }
