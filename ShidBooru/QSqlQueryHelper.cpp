@@ -33,28 +33,57 @@ int getIDFromTagQuery(const QVariant &tag)
     return -1;
 }
 
-bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector)
+bool getItemsFromCustomQuery(QString query, QVector<BooruTypeItem> &item_vector)
 {
     QSqlQuery q;
-    QVariant bind_val(tag_id);
-    q.prepare(GET_ITEMS_FOR_TAG_SQL);
-    q.addBindValue(bind_val);
+    q.prepare(query);
     if(q.exec())
     {
+        qDebug() << "Executed query "+query;
         while(q.next())
         {
             BooruTypeItem item;
             item.sql_id = q.value(0).toInt();
             item.type = itemType(q.value(1).toInt());
             item.path = q.value(2).toString();
-            qDebug() << "Found item "+QString(item.sql_id.toInt())+"  "+item.path+" for tag "+QString(tag_id);
+            qDebug() << "Found item "+QString(item.sql_id.toInt())+"  "+item.path;
             item_vector.push_back(item);
         }
         return true;
     }
     else
     {
-        qDebug() << "Failed to get item from tag id "+QString(tag_id);
+    qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str() << "     " << q.value(0) << q.value(1);
+        qDebug() << "Failed to get items for query "+query;
+    }
+
+    return false;
+}
+
+bool getItemsFromSingleTagQuery(QString tag, QVector<BooruTypeItem> &item_vector)
+{
+    QSqlQuery q;
+    QVariant bind_val(tag);
+    q.prepare(GET_ITEMS_FOR_SINGLE_TAG_SQL);
+    q.addBindValue(bind_val);
+    if(q.exec())
+    {
+        qDebug() << "Searching for tag "+tag;
+    qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str() << "     " << q.value(0) << q.value(1);
+        while(q.next())
+        {
+            BooruTypeItem item;
+            item.sql_id = q.value(0).toInt();
+            item.type = itemType(q.value(1).toInt());
+            item.path = q.value(2).toString();
+            qDebug() << "Found item "+QString(item.sql_id.toInt())+"  "+item.path+" for tag "+tag;
+            item_vector.push_back(item);
+        }
+        return true;
+    }
+    else
+    {
+        qDebug() << "Failed to get item from tag "+tag;
     }
 
     return false;

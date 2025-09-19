@@ -53,6 +53,7 @@ private:
     bool eventFilter(QObject *obj, QEvent *event);
     void SyncItemTag(const QVariant &id_item);
     void importBooruFromFile(void);
+    void searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &items);
     ItemEditor* editor;
     Ui::BooruMenu *ui;
     QString file_or_db_path;

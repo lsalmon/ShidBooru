@@ -125,7 +125,7 @@ void ItemEditor::RemoveSelectedTag()
 
         // If link was the last to use the tag, also remove tag
         QVector<BooruTypeItem> items;
-        getItemsFromTagQuery(tag_id, items);
+        getItemsFromSingleTagQuery(tag, items);
 
         if(items.empty()) {
             qDebug() << "Remove tag "+tag+" completely";

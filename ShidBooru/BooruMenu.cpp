@@ -214,7 +214,7 @@ void BooruMenu::removeImage(void)
                     qDebug() << "Remove link from "+QString(item_data.sql_id.toInt())+" to "+id_tag;
                     // If link was the last to use the tag, also remove tag
                     QVector<BooruTypeItem> items;
-                    getItemsFromTagQuery(id_tag, items);
+                    getItemsFromSingleTagQuery(tag, items);
 
                     if(items.empty()) {
                         qDebug() << "Remove tag "+tag+" completely";
@@ -239,35 +239,160 @@ void BooruMenu::removeImage(void)
     }
 }
 
+void BooruMenu::searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &items)
+{
+    QVector<QString> tags_or;
+    QVector<QString> tags_exclude;
+    QVector<QString> tags_wildcard;
+    QVector<QString> tags_and;
+    QString query(GET_ITEMS_FOR_TAGS_SQL_TEMPLATE);
+
+    for(QString tag : tag_list)
+    {
+        // Skip malformed tags
+        if(tag.isEmpty() || tag.contains(" "))
+        {
+            continue;
+        }
+
+        // OR
+        if(tag[0] == '~')
+        {
+            tag.remove(0, 1);
+            tags_or.push_back(tag);
+        }
+        // NOT
+        else if(tag[0] == '-')
+        {
+            tag.remove(0, 1);
+            tags_exclude.push_back(tag);
+        }
+        // Wildcard
+        else if(tag.contains("*"))
+        {
+            tag.replace('*', "&", Qt::CaseInsensitive);
+            tags_wildcard.push_back(tag);
+        }
+        // Default is AND
+        else
+        {
+            tags_and.push_back(tag);
+        }
+    }
+
+    qDebug() << "Search tags total : ";
+    for(const QString &tag : tags_or)
+    {
+        qDebug() << "OR tag : " << tag;
+    }
+    for(const QString &tag : tags_exclude)
+    {
+        qDebug() << "Exclude tag : " << tag;
+    }
+    for(const QString &tag : tags_wildcard)
+    {
+        qDebug() << "Wildcard tag : " << tag;
+    }
+    for(const QString &tag : tags_and)
+    {
+        qDebug() << "Default (AND) tag : " << tag;
+    }
+
+    if(tags_or.size() > 0)
+    {
+        QString query_or(GET_ITEMS_FOR_TAGS_SQL_OR_SEARCH);
+        QString tags_array("(");
+        for(int i = 0; i < tags_or.count(); i++)
+        {
+            tags_array += "\'" + tags_or[i] + "\'";
+            if(i != tags_or.count()-1)
+            {
+                tags_array += ", ";
+            }
+        }
+
+        tags_array += ")";
+        query_or.replace(":list_or", tags_array, Qt::CaseSensitive);
+
+        query += query_or;
+        qDebug() << "OR tag list : " << query_or;
+    }
+
+    if(tags_wildcard.size() > 0)
+    {
+        QString tags_combo("");
+        if(tags_or.size() > 0)
+        {
+            tags_combo += " OR t.tag ";
+        }
+        for(int i = 0; i < tags_wildcard.count(); i++)
+        {
+            QString query_wildcard(GET_ITEMS_FOR_TAGS_SQL_WILDCARD_SEARCH);
+            query_wildcard.replace(":wildcard", "\'" + tags_wildcard[i] + "\'");
+            tags_combo += query_wildcard;
+            if(i != tags_wildcard.count()-1)
+            {
+                tags_combo += "OR t.tag ";
+            }
+        }
+
+        query += tags_combo;
+        qDebug() << "WILDCARD tag list : " << tags_combo;
+    }
+
+    if(tags_and.size() > 0)
+    {
+        QString tags_list("");
+        if(tags_or.size() > 0 || tags_wildcard.size() > 0)
+        {
+            tags_list += " AND t.tag ";
+        }
+        for(int i = 0; i < tags_and.count(); i++)
+        {
+            tags_list += " = \'" + tags_and[i] + "\'";
+            if(i != tags_and.count()-1)
+            {
+                tags_list += " AND t.tag ";
+            }
+        }
+
+        query += tags_list;
+        qDebug() << "AND tag list : " << tags_list;
+    }
+
+    if(tags_exclude.size() > 0)
+    {
+        QString query_exclude;
+        for(int i = 0; i < tags_exclude.count(); i++)
+        {
+            QString query_exclude_single_tag(GET_ITEMS_FOR_TAGS_SQL_EXCLUDE_TAG_SEARCH);
+            QString tag_exclude = "\'" + tags_exclude[i] + "\'";
+            query_exclude_single_tag.replace(":tag_exclude", tag_exclude, Qt::CaseSensitive);
+            query_exclude += query_exclude_single_tag;
+        }
+
+        qDebug() << "NOT tag query : " << query_exclude;
+        query += query_exclude;
+    }
+
+    if(!getItemsFromCustomQuery(query, items))
+    {
+        DisplayWarningMessage("Cannot get items for query "+query);
+    }
+}
+
 void BooruMenu::searchImage(QString tags)
 {
     QStringList tag_list = tags.split(" ", Qt::SkipEmptyParts);
-
-    QString search_tag = tag_list[0];
     QVector<int> sql_id_list;
+    QVector<BooruTypeItem> items;
 
-    int tag_id = getIDFromTagQuery(search_tag);
-    if(tag_id < 0)
+    searchQueryParser(tag_list, items);
+
+    for(int i = 0; i < items.count(); ++i)
     {
-        qDebug() << "Cannot get tag id for tag "+search_tag;
-        return ;
-    }
-    else
-    {
-        QVector<BooruTypeItem> items;
-        if(!getItemsFromTagQuery(tag_id, items))
-        {
-            DisplayWarningMessage("Cannot get item for tag "+search_tag);
-            return ;
-        }
-        else
-        {
-            for(int i = 0; i < items.count(); ++i)
-            {
-                qDebug() << "For search tag "+search_tag+" --> got item "+items[i].path+" ID item "+items[i].sql_id.toString();
-                sql_id_list.push_back(items[i].sql_id.toInt());
-            }
-        }
+        qDebug() << "--> got item "+items[i].path+" ID item "+items[i].sql_id.toString();
+        sql_id_list.push_back(items[i].sql_id.toInt());
     }
     proxyModel->setSqlIDFilter(sql_id_list, true);
 

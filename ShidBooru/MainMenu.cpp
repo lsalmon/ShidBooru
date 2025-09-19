@@ -19,6 +19,7 @@ MainMenu::~MainMenu()
 
 void MainMenu::closeEvent(QCloseEvent *event)
 {
+    Q_UNUSED(event);
     qDebug() << "Close event";
     //QMainWindow::closeEvent(event);
 }

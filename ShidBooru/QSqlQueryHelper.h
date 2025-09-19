@@ -38,11 +38,42 @@ const auto GET_TAG_ID_SQL = QLatin1String(R"(
     WHERE t.tag = ?
     )");
 
-const auto GET_ITEMS_FOR_TAG_SQL = QLatin1String(R"(
-    SELECT items.id_i, items.type, items.path
-    FROM links l
-    JOIN items ON l.id_item = items.id_i
-    WHERE l.id_tag = ?
+const auto GET_ITEMS_FOR_SINGLE_TAG_SQL = QLatin1String(R"(
+    SELECT i.id_i, i.type, i.path
+    FROM items i
+    JOIN links l ON i.id_i = l.id_item
+    JOIN tags t ON t.id_t = l.id_tag
+    WHERE t.tag = ?
+    )");
+
+const auto GET_ITEMS_FOR_TAGS_SQL_OR_SEARCH = QLatin1String(R"(
+    IN :list_or
+    )");
+
+const auto GET_ITEMS_FOR_TAGS_SQL_WILDCARD_SEARCH = QLatin1String(R"(
+    LIKE :wildcard
+    )");
+
+const auto GET_ITEMS_FOR_TAGS_SQL_SIMPLE_SEARCH = QLatin1String(R"(
+    = :tag
+    )");
+
+const auto GET_ITEMS_FOR_TAGS_SQL_EXCLUDE_TAG_SEARCH = QLatin1String(R"(
+    AND i.id_i NOT IN (
+        SELECT i_ex.id_i
+        FROM items i_ex
+        JOIN links l ON i_ex.id_i = l.id_item
+        JOIN tags t ON t.id_t = l.id_tag
+        WHERE t.tag = :tag_exclude
+    )
+    )");
+
+const auto GET_ITEMS_FOR_TAGS_SQL_TEMPLATE = QLatin1String(R"(
+    SELECT i.id_i, i.type, i.path
+    FROM items i
+    JOIN links l ON i.id_i = l.id_item
+    JOIN tags t ON t.id_t = l.id_tag
+    WHERE t.tag
     )");
 
 const auto GET_TAGS_FOR_ITEM_SQL = QLatin1String(R"(
@@ -100,7 +131,8 @@ QVariant addItemQuery(int type, const QVariant &path);
 
 int getIDFromTagQuery(const QVariant &tag);
 
-bool getItemsFromTagQuery(int tag_id, QVector<BooruTypeItem> &item_vector);
+bool getItemsFromCustomQuery(QString query, QVector<BooruTypeItem> &item_vector);
+bool getItemsFromSingleTagQuery(QString tag, QVector<BooruTypeItem> &item_vector);
 bool dumpItemsQuery(QVector<BooruTypeItem> &item_vector);
 bool getItemFromIDQuery(int id_item, BooruTypeItem &item);
 
