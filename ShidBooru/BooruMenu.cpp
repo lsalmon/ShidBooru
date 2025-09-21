@@ -423,13 +423,20 @@ void BooruMenu::searchImage(QString tags)
     }
     proxyModel->setSqlIDFilter(sql_id_list, true);
 
-    // Auto-select first item in list if it exists
+    // Auto-select first item in list if it exists,
+    // and show the tags for this item
     QModelIndex start = proxyModel->index(0,0);
 
     if(start.isValid() && start.data().type() == (QVariant::Type::String))
     {
         this->ui->listViewFiles->setCurrentIndex(start);
+        this->ui->listViewFiles->selectionModel()->select(start, QItemSelectionModel::Select);
         BooruMenu::viewClickedItemTag(start);
+    }
+    else
+    {
+        // Reset tag list if no hits
+        tagModel.setStringList(QStringList(""));
     }
 }
 
