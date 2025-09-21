@@ -4,6 +4,7 @@
 #include <QImageReader>
 
 static QSqlDatabase db;
+static int key_pressed = Qt::Key_Clear;
 
 static void removeDb()
 {
@@ -42,13 +43,17 @@ void BooruMenu::BooruMenuUISetup(void)
 
     connect(ui->listViewFiles, &QListView::clicked, this, &BooruMenu::viewClickedItemTag);
     connect(ui->listViewFiles, &QListView::doubleClicked, this, &BooruMenu::viewDoubleClickedItem);
+    connect(ui->listViewFiles->selectionModel(), &QItemSelectionModel::currentChanged, this,
+        &BooruMenu::currentChanged);
+    // eventFilter function catches mouse events on viewport and key presses on listView
     ui->listViewFiles->viewport()->installEventFilter(this);
+    ui->listViewFiles->installEventFilter(this);
 
     // Refresh tag list to first item if it exists
     QModelIndex first_idx = model.index(0, 0);
     if(first_idx.isValid())
     {
-        // Select first item
+        // Force select first item
         ui->listViewFiles->setCurrentIndex(first_idx);
         ui->listViewFiles->selectionModel()->select(first_idx, QItemSelectionModel::Select);
 
@@ -246,7 +251,7 @@ void BooruMenu::removeImage(void)
         }
 
         // Reset tag window
-        tagModel.setStringList(QStringList());
+        BooruMenu::ClearItemTag();
     }
 }
 
@@ -423,7 +428,7 @@ void BooruMenu::searchImage(QString tags)
     }
     proxyModel->setSqlIDFilter(sql_id_list, true);
 
-    // Auto-select first item in list if it exists,
+    // Force auto-select first item in list if it exists,
     // and show the tags for this item
     QModelIndex start = proxyModel->index(0,0);
 
@@ -436,7 +441,7 @@ void BooruMenu::searchImage(QString tags)
     else
     {
         // Reset tag list if no hits
-        tagModel.setStringList(QStringList(""));
+        BooruMenu::ClearItemTag();
     }
 }
 
@@ -596,14 +601,33 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
     return true;
 }
 
+void BooruMenu::currentChanged(const QModelIndex &current, const QModelIndex &previous)
+{
+    Q_UNUSED(previous);
+    if(key_pressed != Qt::Key_Clear)
+    {
+        if(key_pressed == Qt::Key_Up ||
+           key_pressed == Qt::Key_Down ||
+           key_pressed == Qt::Key_PageUp ||
+           key_pressed == Qt::Key_PageDown)
+        {
+            BooruMenu::viewClickedItemTag(current);
+        }
+        key_pressed = Qt::Key_Clear;
+    }
+}
+
 bool BooruMenu::eventFilter(QObject *obj, QEvent *event)
 {
-    if(event->type() == QEvent::MouseButtonPress && obj == ui->listViewFiles->viewport()) {
+    // User clicking item
+    if(event->type() == QEvent::MouseButtonPress && obj == ui->listViewFiles->viewport())
+    {
         QMouseEvent *e = static_cast<QMouseEvent *>(event);
         if(e->button() == Qt::RightButton) {
             // Manually set item as selected
             QModelIndex idx = ui->listViewFiles->indexAt(e->pos());
 
+            // Force reset selection
             // Also works with clearSelection() but leaves a light blue marker around previously selected
             ui->listViewFiles->selectionModel()->clear();
             ui->listViewFiles->selectionModel()->select(idx, QItemSelectionModel::Select);
@@ -613,8 +637,33 @@ bool BooruMenu::eventFilter(QObject *obj, QEvent *event)
             ItemContextMenu menu(this, e->globalPos(), &item_data);
         }
     }
+    // See currentChanged
+    // Up/Down keys -> show tags (wait for current index to be updated)
+    // Enter key -> same as double click
+    else if(event->type() == QEvent::KeyPress && obj == ui->listViewFiles)
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        if(keyEvent->key() == Qt::Key_Up ||
+           keyEvent->key() == Qt::Key_Down ||
+           keyEvent->key() == Qt::Key_PageUp ||
+           keyEvent->key() == Qt::Key_PageDown)
+        {
+            key_pressed = keyEvent->key();
+        }
+        else if(keyEvent->key() == Qt::Key_Return)
+        {
+            QModelIndex cur_idx = this->ui->listViewFiles->currentIndex();
+            BooruMenu::viewDoubleClickedItem(cur_idx);
+        }
+    }
 
+    // Standard event processing
     return false;
+}
+
+void BooruMenu::ClearItemTag(void)
+{
+    tagModel.setStringList(QStringList());
 }
 
 void BooruMenu::SyncItemTag(const QVariant &id_item)

@@ -51,9 +51,11 @@ private:
     void BrowseFiles(QDir dir);
     bool LoadFile(QFileInfo info, int item_id);
     bool eventFilter(QObject *obj, QEvent *event);
+    void ClearItemTag(void);
     void SyncItemTag(const QVariant &id_item);
     void importBooruFromFile(void);
     void searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &items);
+    void currentChanged(const QModelIndex &current, const QModelIndex &previous);
     ItemEditor* editor;
     Ui::BooruMenu *ui;
     QString file_or_db_path;
