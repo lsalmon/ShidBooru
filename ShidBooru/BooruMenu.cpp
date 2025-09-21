@@ -43,6 +43,17 @@ void BooruMenu::BooruMenuUISetup(void)
     connect(ui->listViewFiles, &QListView::clicked, this, &BooruMenu::viewClickedItemTag);
     connect(ui->listViewFiles, &QListView::doubleClicked, this, &BooruMenu::viewDoubleClickedItem);
     ui->listViewFiles->viewport()->installEventFilter(this);
+
+    // Refresh tag list to first item if it exists
+    QModelIndex first_idx = model.index(0, 0);
+    if(first_idx.isValid())
+    {
+        // Select first item
+        ui->listViewFiles->setCurrentIndex(first_idx);
+        ui->listViewFiles->selectionModel()->select(first_idx, QItemSelectionModel::Select);
+
+        BooruMenu::viewClickedItemTag(first_idx);
+    }
 }
 
 BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType type) :
