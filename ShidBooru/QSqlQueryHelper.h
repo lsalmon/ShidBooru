@@ -46,16 +46,27 @@ const auto GET_ITEMS_FOR_SINGLE_TAG_SQL = QLatin1String(R"(
     WHERE t.tag = ?
     )");
 
-const auto GET_ITEMS_FOR_TAGS_SQL_OR_SEARCH = QLatin1String(R"(
+const auto GET_ITEMS_FOR_TAGS_SQL_TEMPLATE = QLatin1String(R"(
+    SELECT i.id_i, i.type, i.path
+    FROM items i
+    JOIN links l ON i.id_i = l.id_item
+    JOIN tags t ON t.id_t = l.id_tag
+    WHERE t.tag
+    )");
+
+const auto GET_ITEMS_FOR_TAGS_SQL_OR_SEARCH = GET_ITEMS_FOR_TAGS_SQL_TEMPLATE
++ QLatin1String(R"(
     IN :list_or
     )");
 
-const auto GET_ITEMS_FOR_TAGS_SQL_WILDCARD_SEARCH = QLatin1String(R"(
-    LIKE :wildcard
+const auto GET_ITEMS_FOR_TAGS_SQL_AND_SEARCH = GET_ITEMS_FOR_TAGS_SQL_OR_SEARCH
++ QLatin1String(R"(
+    GROUP BY i.id_i
+    HAVING COUNT(DISTINCT t.tag) = :num_tag
     )");
 
-const auto GET_ITEMS_FOR_TAGS_SQL_SIMPLE_SEARCH = QLatin1String(R"(
-    = :tag
+const auto GET_ITEMS_FOR_TAGS_SQL_WILDCARD_SEARCH_SUFFIX = QLatin1String(R"(
+    LIKE :wildcard
     )");
 
 const auto GET_ITEMS_FOR_TAGS_SQL_EXCLUDE_TAG_SEARCH = QLatin1String(R"(
@@ -66,14 +77,6 @@ const auto GET_ITEMS_FOR_TAGS_SQL_EXCLUDE_TAG_SEARCH = QLatin1String(R"(
         JOIN tags t ON t.id_t = l.id_tag
         WHERE t.tag = :tag_exclude
     )
-    )");
-
-const auto GET_ITEMS_FOR_TAGS_SQL_TEMPLATE = QLatin1String(R"(
-    SELECT i.id_i, i.type, i.path
-    FROM items i
-    JOIN links l ON i.id_i = l.id_item
-    JOIN tags t ON t.id_t = l.id_tag
-    WHERE t.tag
     )");
 
 const auto GET_TAGS_FOR_ITEM_SQL = QLatin1String(R"(

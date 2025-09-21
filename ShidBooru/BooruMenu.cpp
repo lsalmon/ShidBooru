@@ -246,6 +246,7 @@ void BooruMenu::searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &
     QVector<QString> tags_wildcard;
     QVector<QString> tags_and;
     QString query(GET_ITEMS_FOR_TAGS_SQL_TEMPLATE);
+    QString query_exclude("");
 
     for(QString tag : tag_list)
     {
@@ -270,7 +271,7 @@ void BooruMenu::searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &
         // Wildcard
         else if(tag.contains("*"))
         {
-            tag.replace('*', "&", Qt::CaseInsensitive);
+            tag.replace('*', "%", Qt::CaseInsensitive);
             tags_wildcard.push_back(tag);
         }
         // Default is AND
@@ -298,6 +299,23 @@ void BooruMenu::searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &
         qDebug() << "Default (AND) tag : " << tag;
     }
 
+    // Get list of tags to exclude first
+    // as they will be used for other queries
+    if(tags_exclude.size() > 0)
+    {
+        for(int i = 0; i < tags_exclude.count(); i++)
+        {
+            QString query_exclude_single_tag(GET_ITEMS_FOR_TAGS_SQL_EXCLUDE_TAG_SEARCH);
+            QString tag_exclude = "\'" + tags_exclude[i] + "\'";
+            query_exclude_single_tag.replace(":tag_exclude", tag_exclude, Qt::CaseSensitive);
+            query_exclude += query_exclude_single_tag;
+        }
+
+        qDebug() << "NOT tag query : " << query_exclude;
+    }
+
+    // Run queries separately for each type of queries,
+    // with the exclude tags attached
     if(tags_or.size() > 0)
     {
         QString query_or(GET_ITEMS_FOR_TAGS_SQL_OR_SEARCH);
@@ -313,71 +331,69 @@ void BooruMenu::searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &
 
         tags_array += ")";
         query_or.replace(":list_or", tags_array, Qt::CaseSensitive);
+        // Add exclude tags
+        query_or += query_exclude;
 
-        query += query_or;
-        qDebug() << "OR tag list : " << query_or;
+        qDebug() << "OR query : " << query_or;
+
+        if(!getItemsFromCustomQuery(query_or, items))
+        {
+            DisplayWarningMessage("Cannot get items for query OR "+query_or);
+        }
     }
 
     if(tags_wildcard.size() > 0)
     {
+        QString query_wildcard(GET_ITEMS_FOR_TAGS_SQL_TEMPLATE);
         QString tags_combo("");
-        if(tags_or.size() > 0)
-        {
-            tags_combo += " OR t.tag ";
-        }
         for(int i = 0; i < tags_wildcard.count(); i++)
         {
-            QString query_wildcard(GET_ITEMS_FOR_TAGS_SQL_WILDCARD_SEARCH);
-            query_wildcard.replace(":wildcard", "\'" + tags_wildcard[i] + "\'");
-            tags_combo += query_wildcard;
+            QString wildcard_suffix(GET_ITEMS_FOR_TAGS_SQL_WILDCARD_SEARCH_SUFFIX);
+            wildcard_suffix.replace(":wildcard", "\'" + tags_wildcard[i] + "\'");
+            tags_combo += wildcard_suffix;
             if(i != tags_wildcard.count()-1)
             {
                 tags_combo += "OR t.tag ";
             }
         }
 
-        query += tags_combo;
-        qDebug() << "WILDCARD tag list : " << tags_combo;
+        query_wildcard += tags_combo;
+        // Add exclude tags
+        query_wildcard += query_exclude;
+        qDebug() << "WILDCARD tag list : " << query_wildcard;
+
+        if(!getItemsFromCustomQuery(query_wildcard, items))
+        {
+            DisplayWarningMessage("Cannot get items for query WILDCARD "+query_wildcard);
+        }
     }
 
+    // AND query is an OR query with grouping
     if(tags_and.size() > 0)
     {
-        QString tags_list("");
-        if(tags_or.size() > 0 || tags_wildcard.size() > 0)
-        {
-            tags_list += " AND t.tag ";
-        }
+        QString query_and(GET_ITEMS_FOR_TAGS_SQL_AND_SEARCH);
+        QString tags_array("(");
         for(int i = 0; i < tags_and.count(); i++)
         {
-            tags_list += " = \'" + tags_and[i] + "\'";
+            tags_array += "\'" + tags_and[i] + "\'";
             if(i != tags_and.count()-1)
             {
-                tags_list += " AND t.tag ";
+                tags_array += ", ";
             }
         }
 
-        query += tags_list;
-        qDebug() << "AND tag list : " << tags_list;
-    }
+        tags_array += ")";
+        query_and.replace(":list_or", tags_array, Qt::CaseSensitive);
+        query_and.replace(":num_tag", QString::number(tags_and.count()), Qt::CaseSensitive);
 
-    if(tags_exclude.size() > 0)
-    {
-        QString query_exclude;
-        for(int i = 0; i < tags_exclude.count(); i++)
+        // Add exclude tags
+        query_and += query_exclude;
+        qDebug() << "AND tag list : " << query_and;
+
+        if(!getItemsFromCustomQuery(query_and, items))
         {
-            QString query_exclude_single_tag(GET_ITEMS_FOR_TAGS_SQL_EXCLUDE_TAG_SEARCH);
-            QString tag_exclude = "\'" + tags_exclude[i] + "\'";
-            query_exclude_single_tag.replace(":tag_exclude", tag_exclude, Qt::CaseSensitive);
-            query_exclude += query_exclude_single_tag;
+            DisplayWarningMessage("Cannot get items for query AND "+query_and);
         }
-
-        qDebug() << "NOT tag query : " << query_exclude;
-        query += query_exclude;
-    }
-
-    if(!getItemsFromCustomQuery(query, items))
-    {
-        DisplayWarningMessage("Cannot get items for query "+query);
     }
 }
 
