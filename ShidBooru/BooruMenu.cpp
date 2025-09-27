@@ -584,7 +584,11 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
     item = new QStandardItem(info.completeBaseName());
     BooruTypeItem item_data;
 
-    if(info.completeSuffix() == "gif" || info.completeSuffix() == "png" || info.completeSuffix() == "jpg" || info.completeSuffix() == "jpeg")
+    if(info.completeSuffix() == "gif" ||
+        info.completeSuffix() == "png" ||
+        info.completeSuffix() == "jpg" ||
+        info.completeSuffix() == "jpeg" ||
+        info.completeSuffix() == "webp")
     {
         qDebug() << "Load " << info.completeBaseName() << Qt::endl;
         QImage image(info.absoluteFilePath());

@@ -41,7 +41,7 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
         }
         else
         {
-            file_path = QFileDialog::getSaveFileName(this, "Save picture", QDir::homePath(), "Images (*.png *.jpg *.bmp)");
+            file_path = QFileDialog::getSaveFileName(this, "Save picture", QDir::homePath(), "Images (*.png *.jpg *.jpeg *.webp)");
         }
         if(!file_path.isEmpty() && !file_path.isNull())
         {
