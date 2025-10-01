@@ -27,6 +27,9 @@
       </widget>
      </item>
      <item>
+      <widget class="QVideoWidget" name="videoWidget" native="true"/>
+     </item>
+     <item>
       <widget class="QListView" name="tagListView">
        <property name="wordWrap">
         <bool>false</bool>
@@ -74,6 +77,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QVideoWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">QVideoWidget</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

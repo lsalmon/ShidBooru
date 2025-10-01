@@ -11,7 +11,8 @@
 
 typedef enum {
     STILL_IMG,
-    GIF
+    GIF,
+    MOVIE
 } itemType;
 
 struct BooruTypeItem {

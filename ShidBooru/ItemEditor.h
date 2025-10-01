@@ -3,6 +3,9 @@
 
 #include <QDialog>
 #include <QListWidget>
+#include <QVideoWidget>
+#include <QMediaPlayer>
+#include <QCloseEvent>
 #include <QStandardItemModel>
 #include <QStringListModel>
 #include <QDebug>
@@ -43,9 +46,11 @@ private:
     QByteArray gif;
     QBuffer *buf;
     QMovie *gif_movie;
+    QMediaPlayer *player;
 
 protected:
     void mousePressEvent(QMouseEvent* event);
+    virtual void closeEvent(QCloseEvent* event) override;
 };
 
 #endif // ITEMEDITOR_H

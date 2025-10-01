@@ -14,6 +14,10 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QVector>
+#include <QMediaPlayer>
+#include <QMediaMetaData>
+#include <QVideoProbe>
+#include <QVideoFrame>
 #include "BooruItemType.h"
 #include "ItemEditor.h"
 #include "TagFilterProxyModel.h"

@@ -588,18 +588,57 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
         info.completeSuffix() == "png" ||
         info.completeSuffix() == "jpg" ||
         info.completeSuffix() == "jpeg" ||
-        info.completeSuffix() == "webp")
+        info.completeSuffix() == "webp" ||
+        info.completeSuffix() == "webm" ||
+        info.completeSuffix() == "mp4")
     {
         qDebug() << "Load " << info.completeBaseName() << Qt::endl;
         QImage image(info.absoluteFilePath());
         item->setText(info.completeBaseName());
         item_data.extension = info.completeSuffix();
         item_data.path = info.absoluteFilePath();
+
         if(info.completeSuffix() == "gif")
         {
+            item->setIcon(QIcon(QPixmap::fromImage(image)));
             item_data.type = GIF;
         }
-        item->setIcon(QIcon(QPixmap::fromImage(image)));
+        else if(info.completeSuffix() == "webm" || info.completeSuffix() == "mp4")
+        {
+            QVideoProbe *temp_probe = new QVideoProbe(this);
+            QMediaPlayer *thumbnail_player = new QMediaPlayer(this);
+            QEventLoop loop;
+            QImage thumbnail;
+
+            temp_probe->setSource(thumbnail_player);
+
+            // Get thumbnail in local loop (blocking) to treat items sequentially
+            connect(temp_probe, &QVideoProbe::videoFrameProbed, this,
+                [&](const QVideoFrame &frame) {
+                    QVideoFrame temp_frame(frame);
+                    temp_frame.map(QAbstractVideoBuffer::ReadOnly);
+                    thumbnail = temp_frame.image();
+                    temp_frame.unmap();
+                    thumbnail_player->stop();
+                    loop.quit();
+                }
+            );
+
+            thumbnail_player->setMedia(QUrl::fromLocalFile(item_data.path));
+            thumbnail_player->play();
+
+            loop.exec();
+
+            item->setIcon(QIcon(QPixmap::fromImage(thumbnail)));
+            item_data.type = MOVIE;
+            delete thumbnail_player;
+            delete temp_probe;
+        }
+        else
+        {
+            item->setIcon(QIcon(QPixmap::fromImage(image)));
+            item_data.type = STILL_IMG;
+        }
         if(item_id < 0)
         {
             item_data.sql_id = addItemQuery(item_data.type, item_data.path);

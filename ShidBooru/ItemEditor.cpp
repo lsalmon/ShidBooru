@@ -26,12 +26,28 @@ ItemEditor::ItemEditor(QWidget *parent,
             ui->picture->setMovie(gif_movie);
             gif_movie->start();
         }
+
+        ui->picture->show();
+        ui->videoWidget->hide();
+    }
+    else if(item->type == MOVIE)
+    {
+        player = new QMediaPlayer(this);
+        player->setVideoOutput(ui->videoWidget);
+        player->setMedia(QUrl::fromLocalFile(item->path));
+        player->play();
+
+        ui->picture->hide();
+        ui->videoWidget->show();
     }
     else
     {
         QImage image(item->path);
         QPixmap picture = QPixmap::fromImage(image);
         ui->picture->setPixmap(picture);
+
+        ui->picture->show();
+        ui->videoWidget->hide();
     }
 
     // Fixed size, use hint size and cap it to 70% of the screen size
@@ -146,13 +162,29 @@ void ItemEditor::mousePressEvent(QMouseEvent *event)
     }
 }
 
+// For crashes when clicking the cross
+void ItemEditor::closeEvent(QCloseEvent* event)
+{
+    if(item->type == MOVIE)
+    {
+        player->stop();
+        delete(player);
+        player = nullptr;
+    }
+    QDialog::closeEvent(event);
+}
+
 ItemEditor::~ItemEditor()
 {
-    ui->picture->clear();
-    if(item->type == GIF)
+    if(item->type == GIF || item->type == STILL_IMG)
     {
+        ui->picture->clear();
         delete(gif_movie);
         delete(buf);
+    }
+    if(item->type == MOVIE && player)
+    {
+        delete(player);
     }
     delete ui;
 }
