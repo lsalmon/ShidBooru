@@ -14,8 +14,21 @@ ItemEditor::ItemEditor(QWidget *parent,
     db = QSqlDatabase::database();
     ui->setupUi(this);
 
+    if(item->type != MOVIE)
+    {
+        ui->picture->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        ui->picture->setScaledContents(true);
+    }
+
     if(item->type == GIF)
     {
+        ui->playButton->hide();
+        ui->pauseButton->hide();
+        ui->positionSlider->hide();
+        ui->videoWidget->hide();
+        ui->volumeSlider->hide();
+        ui->picture->show();
+
         QFile file(item->path);
         if(file.open(QIODevice::ReadOnly))
         {
@@ -24,48 +37,49 @@ ItemEditor::ItemEditor(QWidget *parent,
             buf->open(QIODevice::ReadOnly);
             gif_movie = new QMovie(buf, QByteArray(), this);
             ui->picture->setMovie(gif_movie);
+            ui->picture->resize(gif_movie->scaledSize());
             gif_movie->start();
         }
-
-        ui->picture->show();
-        ui->videoWidget->hide();
     }
     else if(item->type == MOVIE)
     {
+        ui->picture->hide();
+        ui->playButton->show();
+        ui->pauseButton->show();
+        ui->positionSlider->show();
+        ui->volumeSlider->show();
+        ui->videoWidget->show();
+
         player = new QMediaPlayer(this);
         player->setVideoOutput(ui->videoWidget);
+        // Default volume is 50%
+        player->setVolume(ui->volumeSlider->value());
+        // Get duration of media
+        connect(player, &QMediaPlayer::durationChanged, this, [&](qint64 duration){
+            ui->positionSlider->setMaximum(duration);
+        });
         player->setMedia(QUrl::fromLocalFile(item->path));
-        player->play();
-
-        ui->picture->hide();
-        ui->videoWidget->show();
+        connect(ui->playButton, &QAbstractButton::clicked, this, &ItemEditor::PlayPressed);
+        connect(ui->pauseButton, &QAbstractButton::clicked, this, &ItemEditor::PausePressed);
+        connect(ui->volumeSlider, &QSlider::valueChanged, this, &ItemEditor::VolumeSliderValueUpdated);
+        connect(player, &QMediaPlayer::positionChanged, this, &ItemEditor::PositionSliderUpdate);
+        connect(ui->positionSlider, &QSlider::sliderMoved, this, &ItemEditor::PositionSliderSeek);
     }
     else
     {
+        ui->playButton->hide();
+        ui->pauseButton->hide();
+        ui->positionSlider->hide();
+        ui->videoWidget->hide();
+        ui->volumeSlider->hide();
+        ui->picture->show();
+
         QImage image(item->path);
         QPixmap picture = QPixmap::fromImage(image);
+
         ui->picture->setPixmap(picture);
-
-        ui->picture->show();
-        ui->videoWidget->hide();
+        ui->picture->resize(picture.size());
     }
-
-    // Fixed size, use hint size and cap it to 70% of the screen size
-    QScreen *main_screen = this->screen();
-    QSize hint_size = this->sizeHint();
-    QRect avail = main_screen->availableGeometry();
-    QSize avail_size = avail.size();
-
-    ui->picture->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    ui->picture->setScaledContents(true);
-
-    if(hint_size.height() > 0.7*avail_size.height()
-        || hint_size.width() > 0.7*avail_size.width())
-    {
-        hint_size.setHeight(0.7*avail_size.height());
-        hint_size.setWidth(0.7*avail_size.width());
-    }
-    ui->picture->setFixedSize(hint_size);
 
     // Set tags to a model inside the dialog box and update the QStringList of the model
     ui->tagListView->setModel(&default_tag_model);
@@ -76,6 +90,36 @@ ItemEditor::ItemEditor(QWidget *parent,
 
     connect(ui->addButton, &QPushButton::clicked, this, &ItemEditor::AddTag);
     connect(ui->removeButton, &QPushButton::clicked, this, &ItemEditor::RemoveSelectedTag);
+}
+
+void ItemEditor::PlayPressed()
+{
+    player->play();
+}
+
+void ItemEditor::PausePressed()
+{
+    player->pause();
+}
+
+void ItemEditor::VolumeSliderValueUpdated(int value)
+{
+    // setMuted or volume to 0 does not mute, what is going on ?
+    player->setMuted(value == 0);
+    player->setVolume(value);
+}
+
+void ItemEditor::PositionSliderUpdate(qint64 position)
+{
+    if(!ui->positionSlider->isSliderDown())
+    {
+        ui->positionSlider->setValue(position);
+    }
+}
+
+void ItemEditor::PositionSliderSeek(int value)
+{
+    player->setPosition(value);
 }
 
 void ItemEditor::AddTag()

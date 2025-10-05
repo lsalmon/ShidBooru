@@ -38,6 +38,11 @@ public:
 private slots:
     void AddTag();
     void RemoveSelectedTag();
+    void PlayPressed();
+    void PausePressed();
+    void VolumeSliderValueUpdated(int value);
+    void PositionSliderUpdate(qint64 position);
+    void PositionSliderSeek(int value);
 
 private:
     BooruTypeItem *item;
