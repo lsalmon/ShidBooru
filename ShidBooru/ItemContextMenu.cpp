@@ -4,24 +4,45 @@
 ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *item_data)
 {
     QMenu menu(parent);
-    QAction *copy = menu.addAction("Copy picture to clipboard");
-    QAction *save = menu.addAction("Save content of picture to file");
+    QAction *copy;
+    if(item_data->type == GIF)
+    {
+        copy = menu.addAction("Copy gif to clipboard");
+    }
+    else if(item_data->type == MOVIE)
+    {
+        copy = menu.addAction("Copy movie to clipboard");
+    }
+    else
+    {
+        copy = menu.addAction("Copy picture to clipboard");
+    }
+    QAction *save = menu.addAction("Save content to file");
 
     QAction *selected = menu.exec(pos);
 
     if(selected == copy)
     {
         QClipboard *clipboard = QGuiApplication::clipboard();
-        if(item_data->type == GIF)
+        if(item_data->type == GIF || item_data->type == MOVIE)
         {
-            QByteArray gif;
+            QByteArray raw_data;
             QFile file(item_data->path);
             if(file.open(QIODevice::ReadOnly))
             {
-                gif = file.readAll();
+                raw_data = file.readAll();
                 QMimeData *mimeData = new QMimeData();
-                mimeData->setData("image/gif", gif);
-                clipboard->setMimeData(mimeData);
+
+                if(item_data->type == GIF)
+                {
+                    mimeData->setData("image/gif", raw_data);
+                }
+                else if(item_data->type == MOVIE)
+                {
+                    QString mime_type = "video/"+item_data->extension;
+                    mimeData->setData(mime_type, raw_data);
+                }
+                clipboard->setMimeData(mimeData, QClipboard::Clipboard);
             }
         }
         else
@@ -39,23 +60,27 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
         {
             file_path = QFileDialog::getSaveFileName(this, "Save gif", QDir::homePath(), "GIF Images (*.gif)");
         }
+        else if(item_data->type == MOVIE)
+        {
+            file_path = QFileDialog::getSaveFileName(this, "Save movie", QDir::homePath(), "Movies (*.mp4 *.webm)");
+        }
         else
         {
             file_path = QFileDialog::getSaveFileName(this, "Save picture", QDir::homePath(), "Images (*.png *.jpg *.jpeg *.webp)");
         }
         if(!file_path.isEmpty() && !file_path.isNull())
         {
-            if(item_data->type == GIF)
+            if(item_data->type == GIF || item_data->type == MOVIE)
             {
                 QFile save_file(file_path);
                 if(save_file.open(QIODevice::WriteOnly))
                 {
-                    QByteArray gif;
+                    QByteArray raw_data;
                     QFile file(item_data->path);
                     if(file.open(QIODevice::ReadOnly))
                     {
-                        gif = file.readAll();
-                        save_file.write(gif);
+                        raw_data = file.readAll();
+                        save_file.write(raw_data);
                     }
                     else
                     {
