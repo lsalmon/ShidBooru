@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QGuiApplication>
 #include <QClipboard>
+#include <QUrl>
 #include <QMimeData>
 #include <QMessageBox>
 #include "BooruItemType.h"

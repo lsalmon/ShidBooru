@@ -7,11 +7,11 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
     QAction *copy;
     if(item_data->type == GIF)
     {
-        copy = menu.addAction("Copy gif to clipboard");
+        copy = menu.addAction("Copy url of gif to clipboard");
     }
     else if(item_data->type == MOVIE)
     {
-        copy = menu.addAction("Copy movie to clipboard");
+        copy = menu.addAction("Copy url of movie to clipboard");
     }
     else
     {
@@ -26,30 +26,33 @@ ItemContextMenu::ItemContextMenu(QWidget* parent, QPoint pos, BooruTypeItem *ite
         QClipboard *clipboard = QGuiApplication::clipboard();
         if(item_data->type == GIF || item_data->type == MOVIE)
         {
-            QByteArray raw_data;
             QFile file(item_data->path);
             if(file.open(QIODevice::ReadOnly))
             {
-                raw_data = file.readAll();
                 QMimeData *mimeData = new QMimeData();
+                QList<QUrl> url;
+                url.append(QUrl::fromLocalFile(item_data->path));
 
-                if(item_data->type == GIF)
-                {
-                    mimeData->setData("image/gif", raw_data);
-                }
-                else if(item_data->type == MOVIE)
-                {
-                    QString mime_type = "video/"+item_data->extension;
-                    mimeData->setData(mime_type, raw_data);
-                }
+                mimeData->setUrls(url);
                 clipboard->setMimeData(mimeData, QClipboard::Clipboard);
+            }
+            else
+            {
+                DisplayWarningMessage("Failed to extract url for "+item_data->path);
             }
         }
         else
         {
             QImage image(item_data->path);
             QPixmap picture = QPixmap::fromImage(image);
-            clipboard->setPixmap(picture);
+            if(picture.isNull())
+            {
+                DisplayWarningMessage("Failed to extract picture for "+item_data->path);
+            }
+            else
+            {
+                clipboard->setPixmap(picture);
+            }
         }
     }
     else if(selected == save)
