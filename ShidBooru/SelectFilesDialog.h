@@ -7,6 +7,8 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QComboBox>
+#include <QKeyEvent>
+#include "HelperFunctions.h"
 
 namespace Ui {
 class SelectFilesDialog;
@@ -25,6 +27,8 @@ private slots:
     void SelectDirectory(bool checked);
     void SelectFile(bool checked);
     void ComboChanged(const QString &text);
+    void UserManuallyAddedPath();
+    void keyPressEvent(QKeyEvent *e);
 
 private:
     Ui::SelectFilesDialog *ui;

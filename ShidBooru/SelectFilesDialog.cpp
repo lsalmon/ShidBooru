@@ -10,6 +10,7 @@ SelectFilesDialog::SelectFilesDialog(QWidget *parent) :
     selected = QDir().absolutePath();
     connect(ui->fileSystemExplorer, &QPushButton::clicked, this, &SelectFilesDialog::SelectDirectory);
     connect(ui->comboBox, &QComboBox::currentTextChanged, this, &SelectFilesDialog::ComboChanged);
+    connect(ui->currentPath, &QLineEdit::editingFinished, this, &SelectFilesDialog::UserManuallyAddedPath);
 }
 
 SelectFilesDialog::~SelectFilesDialog()
@@ -20,7 +21,6 @@ SelectFilesDialog::~SelectFilesDialog()
 void SelectFilesDialog::ComboChanged(const QString &text)
 {
     qDebug() << "Combo selection" << text;
-    ui->currentPath->setText(QDir().absolutePath());
     if(text == "File")
     {
         disconnect(ui->fileSystemExplorer, &QPushButton::clicked, this, &SelectFilesDialog::SelectDirectory);
@@ -77,3 +77,40 @@ void SelectFilesDialog::SelectDirectory(bool checked)
     selected = dir;
 }
 
+// Avoid the enter key pressing the "OK" button
+void SelectFilesDialog::keyPressEvent(QKeyEvent *e)
+{
+    if(e->key() == Qt::Key_Enter || e->key() == Qt::Key_Return)
+    {
+        return;
+    }
+    QDialog::keyPressEvent(e);
+}
+
+void SelectFilesDialog::UserManuallyAddedPath()
+{
+    selected = ui->currentPath->text();
+    QFileInfo checkPath(selected);
+    if(checkPath.exists() && checkPath.isFile())
+    {
+        if(ui->fileSystemExplorer->text() == "Select folder")
+        {
+            qDebug() << "Combo changed to file";
+            this->ComboChanged("File");
+        }
+    }
+    else if(checkPath.exists() && checkPath.isDir())
+    {
+        if(ui->fileSystemExplorer->text() == "Select file")
+        {
+            qDebug() << "Combo changed to dir";
+            this->ComboChanged("Directory");
+        }
+    }
+    else
+    {
+        QMessageBox::warning(this, "Not A File/Dir Path", "Input path again");
+        ui->currentPath->setText(QDir().absolutePath());
+        selected = QDir().absolutePath();
+    }
+}
