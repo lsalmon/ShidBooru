@@ -212,10 +212,7 @@ void ItemEditor::closeEvent(QCloseEvent* event)
     if(item->type == MOVIE)
     {
         player->stop();
-        delete(player);
-        player = nullptr;
     }
-    QDialog::closeEvent(event);
 }
 
 ItemEditor::~ItemEditor()
@@ -223,12 +220,6 @@ ItemEditor::~ItemEditor()
     if(item->type == GIF || item->type == STILL_IMG)
     {
         ui->picture->clear();
-        delete(gif_movie);
-        delete(buf);
-    }
-    if(item->type == MOVIE && player)
-    {
-        delete(player);
     }
     delete ui;
 }

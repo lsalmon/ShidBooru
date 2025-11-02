@@ -1,6 +1,7 @@
 #ifndef ITEMEDITOR_H
 #define ITEMEDITOR_H
 
+#include <QPointer>
 #include <QDialog>
 #include <QListWidget>
 #include <QVideoWidget>
@@ -49,9 +50,9 @@ private:
     QStringListModel default_tag_model;
     Ui::ItemEditor *ui;
     QByteArray gif;
-    QBuffer *buf;
-    QMovie *gif_movie;
-    QMediaPlayer *player;
+    QPointer<QBuffer> buf;
+    QPointer<QMovie> gif_movie;
+    QPointer<QMediaPlayer> player;
 
 protected:
     void mousePressEvent(QMouseEvent* event);

@@ -32,7 +32,7 @@ void MainMenu::onCreateBooruButtonClicked(bool checked)
     if(dialbox.exec() == QDialog::Accepted)
     {
         BooruMenu* newmenu = new BooruMenu(this, dialbox.selected, CREATE);
-        newmenu->setAttribute(Qt::WA_DeleteOnClose);
+        newmenu->setAttribute(Qt::WA_QuitOnClose);
         newmenu->show();
     }
 }
@@ -45,7 +45,7 @@ void MainMenu::onLoadBooruButtonClicked(bool checked)
     if(!file_path.isEmpty() && !file_path.isNull())
     {
         BooruMenu* newmenu = new BooruMenu(this, file_path, LOAD);
-        newmenu->setAttribute(Qt::WA_DeleteOnClose);
+        newmenu->setAttribute(Qt::WA_QuitOnClose);
         newmenu->show();
     }
     else

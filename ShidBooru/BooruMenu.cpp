@@ -69,6 +69,10 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType ty
     ui(new Ui::BooruMenu),
     file_or_db_path(_file_or_db_path)
 {
+    thumbnail_player = new QMediaPlayer(nullptr);
+    video_probe = new QVideoProbe(nullptr);
+    video_probe->setSource(thumbnail_player);
+
     ui->setupUi(this);
     db = QSqlDatabase::addDatabase("QSQLITE");
 
@@ -552,6 +556,7 @@ void BooruMenu::importBooruFromFile(void)
 
 BooruMenu::~BooruMenu()
 {
+    this->thumbnail_player->stop();
     delete ui;
     removeDb();
     model.clear();
@@ -605,34 +610,28 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
         }
         else if(info.completeSuffix() == "webm" || info.completeSuffix() == "mp4")
         {
-            QVideoProbe *temp_probe = new QVideoProbe(this);
-            QMediaPlayer *thumbnail_player = new QMediaPlayer(this);
             QEventLoop loop;
-            QImage thumbnail;
-
-            temp_probe->setSource(thumbnail_player);
+            QImage thumbnail = QImage();
 
             // Get thumbnail in local loop (blocking) to treat items sequentially
-            connect(temp_probe, &QVideoProbe::videoFrameProbed, this,
+            connect(this->video_probe, &QVideoProbe::videoFrameProbed, this,
                 [&](const QVideoFrame &frame) {
                     QVideoFrame temp_frame(frame);
                     temp_frame.map(QAbstractVideoBuffer::ReadOnly);
-                    thumbnail = temp_frame.image();
+                    thumbnail = temp_frame.image().copy();
                     temp_frame.unmap();
                     thumbnail_player->stop();
                     loop.quit();
                 }
             );
 
-            thumbnail_player->setMedia(QUrl::fromLocalFile(item_data.path));
-            thumbnail_player->play();
+            this->thumbnail_player->setMedia(QUrl::fromLocalFile(item_data.path));
+            this->thumbnail_player->play();
 
             loop.exec();
 
             item->setIcon(QIcon(QPixmap::fromImage(thumbnail)));
             item_data.type = MOVIE;
-            delete thumbnail_player;
-            delete temp_probe;
         }
         else
         {

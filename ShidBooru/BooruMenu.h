@@ -1,6 +1,7 @@
 #ifndef BOORUMENU_H
 #define BOORUMENU_H
 
+#include <QPointer>
 #include <QFrame>
 #include <QDir>
 #include <QDebug>
@@ -67,6 +68,8 @@ private:
     TagFilterProxyModel *proxyModel;
     QStringListModel tagModel;
     bool searchInProgress = false;
+    QPointer<QVideoProbe> video_probe = nullptr;
+    QPointer<QMediaPlayer> thumbnail_player = nullptr;
 };
 
 #endif // BOORUMENU_H
