@@ -3,15 +3,12 @@
 #include "QSqlQueryHelper.h"
 #include <QDebug>
 
-static QSqlDatabase db;
-
 ItemEditor::ItemEditor(QWidget *parent,
                        BooruTypeItem *_item) :
     QDialog(parent),
     item(_item),
     ui(new Ui::ItemEditor)
 {
-    db = QSqlDatabase::database();
     ui->setupUi(this);
 
     if(item->type != MOVIE)
@@ -82,7 +79,9 @@ ItemEditor::ItemEditor(QWidget *parent,
     }
 
     // Set tags to a model inside the dialog box and update the QStringList of the model
+    QItemSelectionModel *m_discard = ui->tagListView->selectionModel();
     ui->tagListView->setModel(&default_tag_model);
+    delete m_discard;
 
     QStringList tags_list;
     getTagsFromItemQuery(item->sql_id, tags_list);
