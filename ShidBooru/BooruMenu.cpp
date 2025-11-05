@@ -556,7 +556,10 @@ void BooruMenu::importBooruFromFile(void)
 
 BooruMenu::~BooruMenu()
 {
-    this->thumbnail_player->stop();
+    if(this->thumbnail_player != nullptr && this->thumbnail_player->state() != QMediaPlayer::StoppedState)
+    {
+        this->thumbnail_player->stop();
+    }
     delete ui;
     removeDb();
     model.clear();
