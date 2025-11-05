@@ -592,26 +592,25 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
     item = new QStandardItem(info.completeBaseName());
     BooruTypeItem item_data;
 
-    if(info.completeSuffix() == "gif" ||
-        info.completeSuffix() == "png" ||
-        info.completeSuffix() == "jpg" ||
-        info.completeSuffix() == "jpeg" ||
-        info.completeSuffix() == "webp" ||
-        info.completeSuffix() == "webm" ||
-        info.completeSuffix() == "mp4")
+    if(info.suffix() == "gif" ||
+        info.suffix() == "png" ||
+        info.suffix() == "jpg" ||
+        info.suffix() == "jpeg" ||
+        info.suffix() == "webp" ||
+        info.suffix() == "webm" ||
+        info.suffix() == "mp4")
     {
         qDebug() << "Load " << info.completeBaseName() << Qt::endl;
         QImage image(info.absoluteFilePath());
         item->setText(info.completeBaseName());
-        item_data.extension = info.completeSuffix();
+        item_data.extension = info.suffix();
         item_data.path = info.absoluteFilePath();
-
-        if(info.completeSuffix() == "gif")
+        if(info.suffix() == "gif")
         {
             item->setIcon(QIcon(QPixmap::fromImage(image)));
             item_data.type = GIF;
         }
-        else if(info.completeSuffix() == "webm" || info.completeSuffix() == "mp4")
+        else if(info.suffix() == "webm" || info.suffix() == "mp4")
         {
             QEventLoop loop;
             QImage thumbnail = QImage();
@@ -653,7 +652,7 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
     }
     else
     {
-        item_data.extension = info.completeSuffix();
+        item_data.extension = info.suffix();
         item_data.path = info.absoluteFilePath();
         item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
