@@ -4,6 +4,14 @@
 #include <QImageReader>
 #include <algorithm>
 
+// For the webm thumbnail
+#include "opencv2/core/core.hpp"
+#include "opencv2/opencv.hpp"
+#include "opencv2/videoio/videoio.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/video.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
 static QSqlDatabase db;
 static int key_pressed = Qt::Key_Clear;
 
@@ -69,10 +77,6 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType ty
     ui(new Ui::BooruMenu),
     file_or_db_path(_file_or_db_path)
 {
-    thumbnail_player = new QMediaPlayer(nullptr);
-    video_probe = new QVideoProbe(nullptr);
-    video_probe->setSource(thumbnail_player);
-
     ui->setupUi(this);
     db = QSqlDatabase::addDatabase("QSQLITE");
 
@@ -556,10 +560,6 @@ void BooruMenu::importBooruFromFile(void)
 
 BooruMenu::~BooruMenu()
 {
-    if(this->thumbnail_player != nullptr && this->thumbnail_player->state() != QMediaPlayer::StoppedState)
-    {
-        this->thumbnail_player->stop();
-    }
     delete ui;
     removeDb();
     model.clear();
@@ -614,24 +614,11 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
         {
             QEventLoop loop;
             QImage thumbnail = QImage();
+            cv::VideoCapture capture(item_data.path.toStdString());
+            cv::Mat first_frame;
 
-            // Get thumbnail in local loop (blocking) to treat items sequentially
-            connect(this->video_probe, &QVideoProbe::videoFrameProbed, this,
-                [&](const QVideoFrame &frame) {
-                    QVideoFrame temp_frame(frame);
-                    temp_frame.map(QAbstractVideoBuffer::ReadOnly);
-                    thumbnail = temp_frame.image().copy();
-                    temp_frame.unmap();
-                    thumbnail_player->stop();
-                    loop.quit();
-                }
-            );
-
-            this->thumbnail_player->setMedia(QUrl::fromLocalFile(item_data.path));
-            this->thumbnail_player->play();
-
-            loop.exec();
-
+            capture >> first_frame;
+            thumbnail = QImage((uchar*) first_frame.data, first_frame.cols, first_frame.rows, first_frame.step, QImage::Format_RGB888);
             item->setIcon(QIcon(QPixmap::fromImage(thumbnail)));
             item_data.type = MOVIE;
         }

@@ -68,8 +68,6 @@ private:
     TagFilterProxyModel *proxyModel;
     QStringListModel tagModel;
     bool searchInProgress = false;
-    QPointer<QVideoProbe> video_probe = nullptr;
-    QPointer<QMediaPlayer> thumbnail_player = nullptr;
 };
 
 #endif // BOORUMENU_H
