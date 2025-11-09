@@ -60,6 +60,9 @@ void BooruMenu::BooruMenuUISetup(void)
     ui->listViewFiles->viewport()->installEventFilter(this);
     ui->listViewFiles->installEventFilter(this);
 
+    // Avoid weird timing issues between QListView selection update and QDialog
+    ui->listViewFiles->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
     // Refresh tag list to first item if it exists
     QModelIndex first_idx = model.index(0, 0);
     if(first_idx.isValid())
@@ -748,14 +751,18 @@ void BooruMenu::getUpdatedTagList(int state)
     // Delete when leaving dialog window event loop
     editor->deleteLater();
 
-    if(state == QDialog::Accepted)
-    {
-        QModelIndex idx_proxy = this->ui->listViewFiles->currentIndex();
-        QModelIndex idx = proxyModel->mapToSource(idx_proxy);
-        QVariant item_var = idx.data(Qt::UserRole);
-        BooruTypeItem item_data = item_var.value<BooruTypeItem>();
+    QModelIndex idx_proxy = this->ui->listViewFiles->currentIndex();
+    QModelIndex idx = proxyModel->mapToSource(idx_proxy);
 
-        // Update list of tags in model
-        SyncItemTag(item_data.sql_id);
+    if(idx.isValid())
+    {
+        if(state == QDialog::Accepted)
+        {
+            QVariant item_var = idx.data(Qt::UserRole);
+            BooruTypeItem item_data = item_var.value<BooruTypeItem>();
+
+            // Update list of tags in model
+            SyncItemTag(item_data.sql_id);
+        }
     }
 }
