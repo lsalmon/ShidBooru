@@ -34,6 +34,7 @@ class ItemEditor : public QDialog
 public:
     explicit ItemEditor(QWidget *parent = nullptr,
                         BooruTypeItem *_item = nullptr);
+    QStringList getUpdatedTags(void);
     ~ItemEditor();
 
 private slots:
@@ -48,6 +49,7 @@ private slots:
 private:
     BooruTypeItem *item;
     QStringListModel default_tag_model;
+    QStringList updated_tag_list;
     Ui::ItemEditor *ui;
     QByteArray gif;
     QPointer<QBuffer> buf;

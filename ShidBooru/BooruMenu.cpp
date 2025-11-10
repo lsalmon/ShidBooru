@@ -716,10 +716,78 @@ void BooruMenu::ClearItemTag(void)
     tagModel.setStringList(QStringList());
 }
 
-void BooruMenu::SyncItemTag(const QVariant &id_item)
+void BooruMenu::AddItemTags(QStringList tags, QStringList &tags_list, const QVariant &id_item)
 {
-    QStringList tags_list;
-    getTagsFromItemQuery(id_item, tags_list);
+    for(const QString &tag : tags)
+    {
+        int id_tag = checkDuplicateTagQuery(tag);
+        if(id_tag < 0) {
+            id_tag = addTagQuery(tag).toInt();
+            qDebug() << "New tag id " << id_tag;
+        }
+        else {
+            id_tag = getIDFromTagQuery(tag);
+            qDebug() << "Got existing tag id " << id_tag;
+        }
+        int id_link = checkDuplicateLinkQuery(QVariant(id_tag), id_item);
+        if(id_link < 0) {
+            qDebug() << "New link id (tag -> item) " << QString(id_tag) << " -> " << id_item.toString();
+            addLinkQuery(id_item, QVariant(id_tag));
+        }
+        else
+        {
+            DisplayWarningMessage("Cannot link item for tag "+tag+", link already exists ("+id_link+")");
+            // Since linking item to tag failed, remove tag from list
+            tags_list.removeOne(tag);
+            continue;
+        }
+    }
+}
+
+void BooruMenu::RemoveItemTags(QStringList tags, QStringList &tags_list, const QVariant &id_item)
+{
+    for(const QString &tag : tags)
+    {
+        int tag_id = getIDFromTagQuery(tag);
+        if(tag_id < 0)
+        {
+            DisplayWarningMessage("Cannot get tag id for tag "+tag);
+            // Since removing failed, add tag to list again
+            tags_list.append(tag);
+            continue;
+        }
+
+        // Remove link
+        if(!removeLinkQuery(QVariant(id_item), QVariant(tag_id)))
+        {
+            DisplayWarningMessage("Cannot remove link to "+tag);
+            // Since removing failed, add tag to list again
+            tags_list.append(tag);
+            continue;
+        }
+
+        // If link was the last to use the tag, also remove tag
+        QVector<BooruTypeItem> items;
+        getItemsFromSingleTagQuery(tag, items);
+
+        if(items.empty()) {
+            qDebug() << "Remove tag "+tag+" completely";
+            removeTagQuery(tag);
+        }
+    }
+}
+
+void BooruMenu::SyncItemTags(const QVariant &id_item, QSet<QString> new_tag_set, QSet<QString> old_tag_set)
+{
+    QSet<QString> added_tags = new_tag_set - old_tag_set;
+    QSet<QString> removed_tags = old_tag_set - new_tag_set;
+    QStringList tags_list(new_tag_set.begin(), new_tag_set.end());
+    QStringList added_tags_list(added_tags.begin(), added_tags.end());
+    QStringList removed_tags_list(removed_tags.begin(), removed_tags.end());
+
+    AddItemTags(added_tags_list, tags_list, id_item);
+    RemoveItemTags(removed_tags_list, tags_list, id_item);
+
     tagModel.setStringList(tags_list);
 }
 
@@ -728,7 +796,9 @@ void BooruMenu::viewClickedItemTag(const QModelIndex& idx)
     QVariant item_var = idx.data(Qt::UserRole);
     BooruTypeItem item_data = item_var.value<BooruTypeItem>();
     // Update list of tags in model
-    SyncItemTag(item_data.sql_id);
+    QStringList tags_list;
+    getTagsFromItemQuery(item_data.sql_id, tags_list);
+    tagModel.setStringList(tags_list);
 }
 
 void BooruMenu::viewDoubleClickedItem(const QModelIndex& idx)
@@ -758,11 +828,19 @@ void BooruMenu::getUpdatedTagList(int state)
     {
         if(state == QDialog::Accepted)
         {
+
             QVariant item_var = idx.data(Qt::UserRole);
             BooruTypeItem item_data = item_var.value<BooruTypeItem>();
 
+            QStringList new_tag_list = editor->getUpdatedTags();
+            QStringList tags_list;
+            getTagsFromItemQuery(item_data.sql_id, tags_list);
+
+            QSet<QString> new_tag_set(new_tag_list.begin(), new_tag_list.end());
+            QSet<QString> old_tag_set(tags_list.begin(), tags_list.end());
+
             // Update list of tags in model
-            SyncItemTag(item_data.sql_id);
+            SyncItemTags(item_data.sql_id, new_tag_set, old_tag_set);
         }
     }
 }

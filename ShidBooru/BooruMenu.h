@@ -15,6 +15,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QVector>
+#include <QSet>
 #include "BooruItemType.h"
 #include "ItemEditor.h"
 #include "TagFilterProxyModel.h"
@@ -53,7 +54,9 @@ private:
     bool LoadFile(QFileInfo info, int item_id);
     bool eventFilter(QObject *obj, QEvent *event);
     void ClearItemTag(void);
-    void SyncItemTag(const QVariant &id_item);
+    void AddItemTags(QStringList tags, QStringList &tags_list, const QVariant &id_item);
+    void RemoveItemTags(QStringList tags, QStringList &tags_list, const QVariant &id_item);
+    void SyncItemTags(const QVariant &id_item, QSet<QString> new_tag_set, QSet<QString> old_tag_set);
     void importBooruFromFile(void);
     void searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &items);
     void currentChanged(const QModelIndex &current, const QModelIndex &previous);

@@ -138,19 +138,6 @@ void ItemEditor::AddTag()
                 if(tag_list.indexOf(tag) != -1) {
                     QMessageBox::warning(this, tr("ShidBooru"), tr("Tag already exists"));
                 } else {
-                    int id_tag = checkDuplicateTagQuery(tag);
-                    if(id_tag < 0) {
-                        id_tag = addTagQuery(tag).toInt();
-                        qDebug() << "New tag id " << id_tag;
-                    } else {
-                        id_tag = getIDFromTagQuery(tag);
-                        qDebug() << "Got existing tag id " << id_tag;
-                    }
-                    int id_link = checkDuplicateLinkQuery(QVariant(id_tag), item->sql_id);
-                    if(id_link < 0) {
-                        qDebug() << "New link id (tag -> item) " << QString(id_tag) << " -> " << item->sql_id.toString();
-                        addLinkQuery(item->sql_id, QVariant(id_tag));
-                    }
                     // Update list locally
                     tag_list.append(tag);
                     this->default_tag_model.setStringList(tag_list);
@@ -167,34 +154,16 @@ void ItemEditor::RemoveSelectedTag()
     if(tag_index.isValid())
     {
         QStringList tag_list = this->default_tag_model.stringList();
-        QString tag = tag_list.at(tag_index.row());
-        int tag_id = getIDFromTagQuery(tag);
-        if(tag_id < 0)
-        {
-            qDebug() << "Cannot get tag id for tag "+tag;
-            return ;
-        }
-
-        // Remove link
-        if(!removeLinkQuery(QVariant(item->sql_id), QVariant(tag_id)))
-        {
-            qDebug() << "Cannot remove link to "+tag;
-            return ;
-        }
-
-        // If link was the last to use the tag, also remove tag
-        QVector<BooruTypeItem> items;
-        getItemsFromSingleTagQuery(tag, items);
-
-        if(items.empty()) {
-            qDebug() << "Remove tag "+tag+" completely";
-            removeTagQuery(tag);
-        }
 
         // Update list locally
         tag_list.removeAt(tag_index.row());
         this->default_tag_model.setStringList(tag_list);
     }
+}
+
+QStringList ItemEditor::getUpdatedTags(void)
+{
+    return this->default_tag_model.stringList();
 }
 
 void ItemEditor::mousePressEvent(QMouseEvent *event)
