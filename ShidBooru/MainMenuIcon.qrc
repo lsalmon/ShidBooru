@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>../Images/shidbooru_spurdo.png</file>
+    </qresource>
+</RCC>
