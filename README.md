@@ -1,6 +1,8 @@
 # ShidBooru
 Minimal and extra shabby tag-based image system in c++ with qt, loads and saves plain sqlite files, minor opencv bindings (for webm/mp4 thumbnails), the aim is to have images on hand to copy to clipboard directly (for use on discord and stuff).
 
+Perfs are abysmal :DDDD (rough estimate is ~2.5s for loading a ~800 items savefile)
+
 Does not cache or copy the files, basically just links tags to filepath, so if you remove a file on disk ShidBooru will ask you for the filepath again.
 
 To create a new group of images or image and start tagging them, click "New booru" and then input path to a directory or a file (or use the "select folder" button).

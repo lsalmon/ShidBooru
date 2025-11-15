@@ -3,6 +3,7 @@ QT       += core gui widgets sql multimedia multimediawidgets
 greaterThan(QT_MAJOR_VERSION, 5): QT +=
 
 CONFIG += c++11
+CONFIG(release, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
 
 INCLUDEPATH += /usr/include/opencv4
 DEPENDPATH += /usr/include/opencv4

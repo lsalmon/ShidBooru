@@ -515,7 +515,6 @@ void BooruMenu::exportToBooruFile(void)
             {
                 DisplayWarningMessage("Failed to export db to "+file_path+" "+db.lastError().text());
             }
-        qDebug() << q.boundValue(0) << "    " << q.executedQuery().toStdString().c_str();
             return ;
         }
     }
