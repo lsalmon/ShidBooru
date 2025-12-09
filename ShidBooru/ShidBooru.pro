@@ -1,4 +1,4 @@
-QT       += core gui widgets sql multimedia multimediawidgets
+QT       += core gui widgets sql multimedia multimediawidgets concurrent
 
 greaterThan(QT_MAJOR_VERSION, 5): QT +=
 
@@ -34,6 +34,7 @@ HEADERS += \
     ItemContextMenu.h \
     ItemEditor.h \
     ItemEditorDelegate.h \
+    LoadingAnimation.h \
     MainMenu.h \
     QSqlQueryHelper.h \
     SearchTagDialog.h \
@@ -43,6 +44,7 @@ HEADERS += \
 FORMS += \
     BooruMenu.ui \
     ItemEditor.ui \
+    LoadingAnimation.ui \
     MainMenu.ui \
     SearchTagDialog.ui \
     SelectFilesDialog.ui

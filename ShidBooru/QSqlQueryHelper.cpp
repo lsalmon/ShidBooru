@@ -88,7 +88,7 @@ bool getItemsFromSingleTagQuery(QString tag, QVector<BooruTypeItem> &item_vector
     return false;
 }
 
-bool dumpItemsQuery(QVector<BooruTypeItem> &item_vector)
+bool dumpItemsQuery(QQueue<BooruTypeItem> &item_vector)
 {
     QSqlQuery q;
     if(q.exec(DUMP_ALL_ITEMS_SQL))
@@ -100,7 +100,7 @@ bool dumpItemsQuery(QVector<BooruTypeItem> &item_vector)
             item.type = itemType(q.value(1).toInt());
             item.path = q.value(2).toString();
             qDebug() << "Found item "+QString(item.sql_id.toString())+"  "+item.path;
-            item_vector.push_back(item);
+            item_vector.enqueue(item);
         }
         return true;
     }

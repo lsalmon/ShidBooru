@@ -3,6 +3,9 @@
 #include "QSqlQueryHelper.h"
 #include <QImageReader>
 #include <algorithm>
+#include <QMutexLocker>
+#include <QMutex>
+#include "LoadingAnimation.h"
 
 // For the webm thumbnail
 #include "opencv2/core/core.hpp"
@@ -14,6 +17,7 @@
 
 static QSqlDatabase db;
 static int key_pressed = Qt::Key_Clear;
+static QStandardItemModel model;
 
 static void removeDb()
 {
@@ -171,7 +175,53 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType ty
             return ;
         }
 
-        importBooruFromFile();
+        // Play loading animation while importing booru file
+        LoadingAnimation* load_screen = new LoadingAnimation(this);
+
+        // Get SQL IDs from db first
+        // (db cannot be accessed from another thread)
+        QQueue<BooruTypeItem> items;
+        readBooruSQLFile(items);
+
+        QMutex items_mutex;
+
+        // Import items from db
+        QFuture<void> import_future = QtConcurrent::run(importBooruFromFile, &items, &items_mutex);
+        auto import_watcher = new QFutureWatcher<void>(this);
+        import_watcher->setFuture(import_future);
+        connect(import_watcher, &QFutureWatcher<void>::finished, this, [&]()
+            {
+                load_screen->close();
+            });
+
+
+        load_screen->setModal(true);
+        load_screen->exec();
+
+        import_watcher->waitForFinished();
+
+        // Resolve missing files
+        while(!items.isEmpty())
+        {
+            BooruTypeItem it = items.dequeue();
+
+            DisplayWarningMessage(it.path+" does not exist, point to another file");
+            QString file_dialog_title("Get new path for ");
+            file_dialog_title += it.path;
+
+            QString file = QFileDialog::getOpenFileName(this, tr(file_dialog_title.toStdString().c_str()), QDir().absolutePath());
+            if(file.isEmpty())
+            {
+                DisplayInfoMessage(it.path+" not fixed");
+            }
+            else
+            {
+                it.path = file;
+            }
+
+            LoadFile(it.path, it.sql_id.toInt());
+            qDebug() << "Import item "+it.path+" ID item "+it.sql_id.toString();
+        }
     }
 
     BooruMenuUISetup();
@@ -524,40 +574,35 @@ void BooruMenu::exportToBooruFile(void)
     }
 }
 
-void BooruMenu::importBooruFromFile(void)
+void BooruMenu::readBooruSQLFile(QQueue<BooruTypeItem> &items)
 {
-    QVector<BooruTypeItem> items;
     if(!dumpItemsQuery(items))
     {
         DisplayWarningMessage("Cannot dump items table");
-        return ;
     }
-    else
+}
+
+void BooruMenu::importBooruFromFile(QQueue<BooruTypeItem> *items, QMutex *items_mutex)
+{
+    QMutexLocker locker(items_mutex);
+    for(auto it = items->begin(); it != items->end() ;)
     {
-        for(int i = 0; i < items.count(); ++i)
+        // If file doesnt exist, keep it in queue
+        // and ask user for another path when done loading the rest
+        // Else remove it
+        if(QFile::exists(it->path))
         {
-            // If file doesnt exist, ask user for another path
-            if(!QFile::exists(items[i].path))
-            {
-                DisplayWarningMessage(items[i].path+" does not exist, point to another file");
-                QString file_dialog_title("Get new path for ");
-                file_dialog_title += items[i].path;
+            LoadFile(it->path, it->sql_id.toInt());
+            qDebug() << "Import item "+it->path+" ID item "+it->sql_id.toString();
 
-                QString file = QFileDialog::getOpenFileName(this, tr(file_dialog_title.toStdString().c_str()), QDir().absolutePath());
-                if(file.isEmpty())
-                {
-                    DisplayInfoMessage(items[i].path+" not fixed");
-                }
-                else
-                {
-                    items[i].path = file;
-                }
-            }
-
-            LoadFile(items[i].path, items[i].sql_id.toInt());
-            qDebug() << "Import item "+items[i].path+" ID item "+items[i].sql_id.toString();
+            it = items->erase(it);
+        }
+        else
+        {
+            ++it;
         }
     }
+    // QMutexLocker deleted implicitely when reaching the end of the function
 }
 
 BooruMenu::~BooruMenu()

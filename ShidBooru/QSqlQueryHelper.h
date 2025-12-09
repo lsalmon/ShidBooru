@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QVector>
 #include <QStringList>
+#include <QQueue>
 #include "BooruItemType.h"
 
 const auto ITEM_SQL = QLatin1String(R"(
@@ -136,7 +137,7 @@ int getIDFromTagQuery(const QVariant &tag);
 
 bool getItemsFromCustomQuery(QString query, QVector<BooruTypeItem> &item_vector);
 bool getItemsFromSingleTagQuery(QString tag, QVector<BooruTypeItem> &item_vector);
-bool dumpItemsQuery(QVector<BooruTypeItem> &item_vector);
+bool dumpItemsQuery(QQueue<BooruTypeItem> &item_vector);
 bool getItemFromIDQuery(int id_item, BooruTypeItem &item);
 
 bool getTagsFromItemQuery(const QVariant &id_item, QStringList &tags_list);
