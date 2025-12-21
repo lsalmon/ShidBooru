@@ -54,15 +54,15 @@ private slots:
 private:
     void BooruMenuUISetup(void);
     void BrowseFiles(QDir dir);
-    static bool LoadFile(QFileInfo info, int item_id);
+    static bool LoadFile(BooruTypeItem &item_data);
+    static void importBooruFromFile(BooruTypeItem &item);
+    static bool CreateItemFromFile(BooruTypeItem &item);
     bool eventFilter(QObject *obj, QEvent *event);
     void ClearItemTag(void);
     void AddItemTags(QStringList tags, QStringList &tags_list, const QVariant &id_item);
     void RemoveItemTags(QStringList tags, QStringList &tags_list, const QVariant &id_item);
     void SyncItemTags(const QVariant &id_item, QSet<QString> new_tag_set, QSet<QString> old_tag_set);
-    void loadExistingBooru(void);
-    void readBooruSQLFile(QQueue<BooruTypeItem> &items);
-    static void importBooruFromFile(QQueue<BooruTypeItem> *items, QMutex *items_mutex);
+    void readBooruSQLFile(QVector<BooruTypeItem> &items);
     void searchQueryParser(QStringList tag_list, QVector<BooruTypeItem> &items);
     void currentChanged(const QModelIndex &current, const QModelIndex &previous);
     ItemEditor* editor;

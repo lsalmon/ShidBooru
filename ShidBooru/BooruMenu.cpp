@@ -159,7 +159,11 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType ty
         }
         else
         {
-            LoadFile(fileinfo, -1);
+            BooruTypeItem item_data;
+            item_data.path = file_or_db_path;
+            item_data.sql_id = QVariant(-1);
+            LoadFile(item_data);
+            CreateItemFromFile(item_data);
         }
     }
     else
@@ -175,53 +179,67 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType ty
             return ;
         }
 
-        // Play loading animation while importing booru file
-        LoadingAnimation* load_screen = new LoadingAnimation(this);
+        // Launch import after UI is set
+        QTimer::singleShot(10, [this]() {
+            // Play loading animation while importing booru file
+            LoadingAnimation* load_screen = new LoadingAnimation(this);
 
-        // Get SQL IDs from db first
-        // (db cannot be accessed from another thread)
-        QQueue<BooruTypeItem> items;
-        readBooruSQLFile(items);
+            // Get SQL IDs from db first
+            // (db cannot be accessed from another thread)
+            QVector<BooruTypeItem> items;
+            readBooruSQLFile(items);
+            int num_items = items.size();
 
-        QMutex items_mutex;
+            // Import items from db
+            auto import_future = QtConcurrent::map(items.begin(), items.end(), importBooruFromFile);
+            auto import_watcher = new QFutureWatcher<void>(this);
+            import_watcher->setFuture(import_future);
+            connect(import_watcher, &QFutureWatcher<void>::finished, this, [&load_screen]()
+                {
+                    load_screen->close();
+                });
 
-        // Import items from db
-        QFuture<void> import_future = QtConcurrent::run(importBooruFromFile, &items, &items_mutex);
-        auto import_watcher = new QFutureWatcher<void>(this);
-        import_watcher->setFuture(import_future);
-        connect(import_watcher, &QFutureWatcher<void>::finished, this, [&]()
+            connect(import_watcher, &QFutureWatcher<void>::progressValueChanged, this, [&num_items, &load_screen](int progress)
+                {
+                    float percentage = (float(progress)/float(num_items))*100;
+                    qDebug() << percentage << "% complete";
+                    load_screen->updateSlider((int)percentage);
+                });
+
+            load_screen->setModal(true);
+            load_screen->exec();
+
+            import_watcher->waitForFinished();
+
+            // Resolve missing files
+            for(auto it : items)
             {
-                load_screen->close();
-            });
+                // Create element in GUI (QStandardItem) in GUI thread instead of QtConcurrent::map
+                if(!CreateItemFromFile(it))
+                {
+                    DisplayWarningMessage(it.path+" does not exist, point to another file");
+                    QString file_dialog_title("Get new path for ");
+                    file_dialog_title += it.path;
 
+                    QString file = QFileDialog::getOpenFileName(this, tr(file_dialog_title.toStdString().c_str()), QDir().absolutePath());
+                    if(file.isEmpty())
+                    {
+                        DisplayInfoMessage(it.path+" not fixed");
+                    }
+                    else
+                    {
+                        it.path = file;
+                    }
 
-        load_screen->setModal(true);
-        load_screen->exec();
+                    // Update BooruTypeItem struct and
+                    // Retry creating element in GUI based on updated BooruTypeItem struct
+                    LoadFile(it);
+                    CreateItemFromFile(it);
+                }
 
-        import_watcher->waitForFinished();
-
-        // Resolve missing files
-        while(!items.isEmpty())
-        {
-            BooruTypeItem it = items.dequeue();
-
-            DisplayWarningMessage(it.path+" does not exist, point to another file");
-            QString file_dialog_title("Get new path for ");
-            file_dialog_title += it.path;
-
-            QString file = QFileDialog::getOpenFileName(this, tr(file_dialog_title.toStdString().c_str()), QDir().absolutePath());
-            if(file.isEmpty())
-            {
-                DisplayInfoMessage(it.path+" not fixed");
+                qDebug() << "Import item "+it.path+" ID item "+it.sql_id.toString();
             }
-            else
-            {
-                it.path = file;
-            }
-
-            LoadFile(it.path, it.sql_id.toInt());
-            qDebug() << "Import item "+it.path+" ID item "+it.sql_id.toString();
-        }
+        });
     }
 
     BooruMenuUISetup();
@@ -256,7 +274,11 @@ void BooruMenu::addImage(void)
         }
         else
         {
-            LoadFile(fileinfo, -1);
+            BooruTypeItem item_data;
+            item_data.path = dialbox.selected;
+            item_data.sql_id = QVariant(-1);
+            LoadFile(item_data);
+            CreateItemFromFile(item_data);
         }
     }
 }
@@ -574,7 +596,7 @@ void BooruMenu::exportToBooruFile(void)
     }
 }
 
-void BooruMenu::readBooruSQLFile(QQueue<BooruTypeItem> &items)
+void BooruMenu::readBooruSQLFile(QVector<BooruTypeItem> &items)
 {
     if(!dumpItemsQuery(items))
     {
@@ -582,27 +604,15 @@ void BooruMenu::readBooruSQLFile(QQueue<BooruTypeItem> &items)
     }
 }
 
-void BooruMenu::importBooruFromFile(QQueue<BooruTypeItem> *items, QMutex *items_mutex)
+void BooruMenu::importBooruFromFile(BooruTypeItem &item)
 {
-    QMutexLocker locker(items_mutex);
-    for(auto it = items->begin(); it != items->end() ;)
+    // If file exist, fill out BooruTypeItem struct
+    // Else resolve later
+    if(QFile::exists(item.path))
     {
-        // If file doesnt exist, keep it in queue
-        // and ask user for another path when done loading the rest
-        // Else remove it
-        if(QFile::exists(it->path))
-        {
-            LoadFile(it->path, it->sql_id.toInt());
-            qDebug() << "Import item "+it->path+" ID item "+it->sql_id.toString();
-
-            it = items->erase(it);
-        }
-        else
-        {
-            ++it;
-        }
+        LoadFile(item);
+        qDebug() << "Import item "+item.path+" ID item "+item.sql_id.toString();
     }
-    // QMutexLocker deleted implicitely when reaching the end of the function
 }
 
 BooruMenu::~BooruMenu()
@@ -623,21 +633,53 @@ void BooruMenu::BrowseFiles(QDir dir)
             continue;
         }
 
-        QFileInfo fileinfo(path);
-        LoadFile(path, -1);
+        BooruTypeItem item_data;
+        item_data.path = path;
+        item_data.sql_id = QVariant(-1);
+        LoadFile(item_data);
+        CreateItemFromFile(item_data);
     }
 }
 
-bool BooruMenu::LoadFile(QFileInfo info, int item_id)
+bool BooruMenu::CreateItemFromFile(BooruTypeItem &item_data)
 {
-    QStandardItem* item;
+    if(item_data.type == UNINIT)
+    {
+        return false;
+    }
+
+    // Do the opencv thumbnail extraction inside the GUI loop
+    if(item_data.type == MOVIE)
+    {
+        cv::VideoCapture capture(item_data.path.toStdString());
+        cv::Mat first_frame;
+
+        capture >> first_frame;
+        item_data.thumbnail = QImage((uchar*) first_frame.data, first_frame.cols, first_frame.rows, first_frame.step, QImage::Format_RGB888);
+    }
+
+    QFileInfo info(item_data.path);
+    QStandardItem* item = new QStandardItem(info.completeBaseName());
+    
+    qDebug() << "Create item " << info.completeBaseName() << Qt::endl;
+    item->setText(info.completeBaseName());
+    item->setIcon(QIcon(QPixmap::fromImage(item_data.thumbnail)));
+    item->setData(QVariant::fromValue(item_data), Qt::UserRole);
+    model.appendRow(item);
+
+    return true;
+}
+
+bool BooruMenu::LoadFile(BooruTypeItem &item_data)
+{
+    QFileInfo info(item_data.path);
+
     if(!info.isFile() || !info.exists() || !info.isReadable())
     {
         return false;
     }
 
-    item = new QStandardItem(info.completeBaseName());
-    BooruTypeItem item_data;
+    int item_id = item_data.sql_id.toInt();
 
     if(info.suffix() == "gif" ||
         info.suffix() == "png" ||
@@ -648,30 +690,21 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
         info.suffix() == "mp4")
     {
         qDebug() << "Load " << info.completeBaseName() << Qt::endl;
-        QImage image(info.absoluteFilePath());
-        item->setText(info.completeBaseName());
         item_data.extension = info.suffix();
         item_data.path = info.absoluteFilePath();
         if(info.suffix() == "gif")
         {
-            item->setIcon(QIcon(QPixmap::fromImage(image)));
+            item_data.thumbnail = QImage(info.absoluteFilePath());
             item_data.type = GIF;
         }
         else if(info.suffix() == "webm" || info.suffix() == "mp4")
         {
-            QEventLoop loop;
-            QImage thumbnail = QImage();
-            cv::VideoCapture capture(item_data.path.toStdString());
-            cv::Mat first_frame;
-
-            capture >> first_frame;
-            thumbnail = QImage((uchar*) first_frame.data, first_frame.cols, first_frame.rows, first_frame.step, QImage::Format_RGB888);
-            item->setIcon(QIcon(QPixmap::fromImage(thumbnail)));
+            // Do the thumbnail extraction outside of a processing thread
             item_data.type = MOVIE;
         }
         else
         {
-            item->setIcon(QIcon(QPixmap::fromImage(image)));
+            item_data.thumbnail = QImage(info.absoluteFilePath());
             item_data.type = STILL_IMG;
         }
         if(item_id < 0)
@@ -682,16 +715,13 @@ bool BooruMenu::LoadFile(QFileInfo info, int item_id)
         {
             item_data.sql_id = item_id;
         }
-        item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
     else
     {
         item_data.extension = info.suffix();
         item_data.path = info.absoluteFilePath();
-        item->setData(QVariant::fromValue(item_data), Qt::UserRole);
     }
 
-    model.appendRow(item);
     return true;
 }
 

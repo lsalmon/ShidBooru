@@ -20,6 +20,10 @@ public:
         Q_UNUSED(parent);
         ui->setupUi(this);
     }
+    void updateSlider(int percentage)
+    {
+        this->ui->progressBar->setValue(percentage);
+    }
     ~LoadingAnimation()
     {
         delete ui;
