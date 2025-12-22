@@ -220,7 +220,7 @@ BooruMenu::BooruMenu(QWidget *parent, QStringList _files_or_db_path, BooruInitTy
         }
 
         // Launch import after UI is set
-        QTimer::singleShot(10, [this]() {
+        QTimer::singleShot(500, [this]() {
             // Play loading animation while importing booru file
             LoadingAnimation* load_screen = new LoadingAnimation(this);
 
@@ -234,12 +234,13 @@ BooruMenu::BooruMenu(QWidget *parent, QStringList _files_or_db_path, BooruInitTy
             auto import_future = QtConcurrent::map(items.begin(), items.end(), importBooruFromFile);
             auto import_watcher = new QFutureWatcher<void>(this);
             import_watcher->setFuture(import_future);
-            connect(import_watcher, &QFutureWatcher<void>::finished, this, [&load_screen]()
+            connect(import_watcher, &QFutureWatcher<void>::finished, this, [load_screen]()
                 {
+                    qDebug() << "Turbo shits";
                     load_screen->close();
                 });
 
-            connect(import_watcher, &QFutureWatcher<void>::progressValueChanged, this, [&num_items, &load_screen](int progress)
+            connect(import_watcher, &QFutureWatcher<void>::progressValueChanged, this, [&num_items, load_screen](int progress)
                 {
                     float percentage = (float(progress)/float(num_items))*100;
                     qDebug() << percentage << "% complete";
