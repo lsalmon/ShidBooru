@@ -7,7 +7,8 @@ SelectFilesDialog::SelectFilesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->currentPath->setText(QDir().absolutePath());
-    selected = QDir().absolutePath();
+    selected.clear();
+    selected.prepend(QDir().absolutePath());
     connect(ui->fileSystemExplorer, &QPushButton::clicked, this, &SelectFilesDialog::SelectDirectory);
     connect(ui->comboBox, &QComboBox::currentTextChanged, this, &SelectFilesDialog::ComboChanged);
     connect(ui->currentPath, &QLineEdit::editingFinished, this, &SelectFilesDialog::UserManuallyAddedPath);
@@ -39,18 +40,19 @@ void SelectFilesDialog::SelectFile(bool checked)
 {
     Q_UNUSED(checked);
     qDebug() << "Select file";
-    QString file = QFileDialog::getOpenFileName(this, tr("Select a file"), QDir().absolutePath());
-    if(file.isEmpty())
+    QStringList files = QFileDialog::getOpenFileNames(this, tr("Select file(s)"), QDir().absolutePath());
+    if(files.isEmpty())
     {
-        QMessageBox::information(this, "No File Selected", "Select file again");
+        QMessageBox::information(this, "No File Selected", "Select file(s) again");
         return;
     }
     else
     {
-        ui->currentPath->setText(file);
+        ui->currentPath->setText(files[0]);
     }
 
-    selected = file;
+    selected.clear();
+    selected = files;
 }
 
 void SelectFilesDialog::SelectDirectory(bool checked)
@@ -74,7 +76,8 @@ void SelectFilesDialog::SelectDirectory(bool checked)
         QMessageBox::information(this, "Empty Directory", "No files will be available");
     }
 
-    selected = dir;
+    selected.clear();
+    selected.prepend(dir);
 }
 
 // Avoid the enter key pressing the "OK" button
@@ -89,8 +92,9 @@ void SelectFilesDialog::keyPressEvent(QKeyEvent *e)
 
 void SelectFilesDialog::UserManuallyAddedPath()
 {
-    selected = ui->currentPath->text();
-    QFileInfo checkPath(selected);
+    selected.clear();
+    selected.prepend(ui->currentPath->text());
+    QFileInfo checkPath(selected[0]);
     if(checkPath.exists() && checkPath.isFile())
     {
         if(ui->fileSystemExplorer->text() == "Select folder")
@@ -111,6 +115,7 @@ void SelectFilesDialog::UserManuallyAddedPath()
     {
         QMessageBox::warning(this, "Not A File/Dir Path", "Input path again");
         ui->currentPath->setText(QDir().absolutePath());
-        selected = QDir().absolutePath();
+        selected.clear();
+        selected.prepend(QDir().absolutePath());
     }
 }

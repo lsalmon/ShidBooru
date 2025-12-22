@@ -41,8 +41,11 @@ void MainMenu::onLoadBooruButtonClicked(bool checked)
 {
     Q_UNUSED(checked);
 
-    QString file_path = QFileDialog::getOpenFileName(this, "Load database", QDir::homePath(), "SQLite Database (*.sqlite)");
-    if(!file_path.isEmpty() && !file_path.isNull())
+    // Use QStringList for compatibility with ctor
+    // TODO : overload the ctor ?
+    QStringList file_path = QStringList();
+    file_path.prepend(QFileDialog::getOpenFileName(this, "Load database", QDir::homePath(), "SQLite Database (*.sqlite)"));
+    if(!file_path[0].isEmpty() && !file_path[0].isNull())
     {
         BooruMenu* newmenu = new BooruMenu(this, file_path, LOAD);
         newmenu->setAttribute(Qt::WA_QuitOnClose);

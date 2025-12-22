@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QComboBox>
 #include <QKeyEvent>
+#include <QStringList>
 #include "HelperFunctions.h"
 
 namespace Ui {
@@ -21,7 +22,7 @@ class SelectFilesDialog : public QDialog
 public:
     explicit SelectFilesDialog(QWidget *parent = nullptr);
     ~SelectFilesDialog();
-    QString selected;
+    QStringList selected;
 
 private slots:
     void SelectDirectory(bool checked);

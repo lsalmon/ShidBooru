@@ -36,7 +36,7 @@ class BooruMenu : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit BooruMenu(QWidget *parent = nullptr, QString _file_or_db_path = "", BooruInitType type = CREATE);
+    explicit BooruMenu(QWidget *parent = nullptr, QStringList _files_or_db_path = QStringList(), BooruInitType type = CREATE);
     ~BooruMenu();
 
 private slots:
@@ -67,7 +67,7 @@ private:
     void currentChanged(const QModelIndex &current, const QModelIndex &previous);
     ItemEditor* editor;
     Ui::BooruMenu *ui;
-    QString file_or_db_path;
+    QStringList files_or_db_path;
     QStringListModel tagModel;
     TagFilterProxyModel *proxyModel;
     bool searchInProgress = false;

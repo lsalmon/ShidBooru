@@ -79,10 +79,10 @@ void BooruMenu::BooruMenuUISetup(void)
     }
 }
 
-BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType type) :
+BooruMenu::BooruMenu(QWidget *parent, QStringList _files_or_db_path, BooruInitType type) :
     QMainWindow(parent),
     ui(new Ui::BooruMenu),
-    file_or_db_path(_file_or_db_path)
+    files_or_db_path(_files_or_db_path)
 {
     ui->setupUi(this);
     db = QSqlDatabase::addDatabase("QSQLITE");
@@ -102,7 +102,7 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType ty
     else
     {
         // Load database from file
-        db.setDatabaseName(_file_or_db_path);
+        db.setDatabaseName(_files_or_db_path[0]);
 
         if(!db.open())
         {
@@ -152,18 +152,21 @@ BooruMenu::BooruMenu(QWidget *parent, QString _file_or_db_path, BooruInitType ty
         }
 
         // Load items from user directory or from single file
-        QFileInfo fileinfo(file_or_db_path);
+        QFileInfo fileinfo(files_or_db_path[0]);
         if(fileinfo.isDir())
         {
-            BrowseFiles(QDir(file_or_db_path));
+            BrowseFiles(QDir(files_or_db_path[0]));
         }
         else
         {
-            BooruTypeItem item_data;
-            item_data.path = file_or_db_path;
-            item_data.sql_id = QVariant(-1);
-            LoadFile(item_data);
-            CreateItemFromFile(item_data);
+            for(int i = 0; i < files_or_db_path.size(); i++)
+            {
+                BooruTypeItem item_data;
+                item_data.path = files_or_db_path[i];
+                item_data.sql_id = QVariant(-1);
+                LoadFile(item_data);
+                CreateItemFromFile(item_data);
+            }
         }
     }
     else
@@ -267,18 +270,21 @@ void BooruMenu::addImage(void)
     SelectFilesDialog dialbox(this);
     if(dialbox.exec() == QDialog::Accepted)
     {
-        QFileInfo fileinfo(dialbox.selected);
+        QFileInfo fileinfo(dialbox.selected[0]);
         if(fileinfo.isDir())
         {
-            BrowseFiles(QDir(dialbox.selected));
+            BrowseFiles(QDir(dialbox.selected[0]));
         }
         else
         {
-            BooruTypeItem item_data;
-            item_data.path = dialbox.selected;
-            item_data.sql_id = QVariant(-1);
-            LoadFile(item_data);
-            CreateItemFromFile(item_data);
+            for(int i = 0; i < dialbox.selected.size(); i++)
+            {
+                BooruTypeItem item_data;
+                item_data.path = dialbox.selected[i];
+                item_data.sql_id = QVariant(-1);
+                LoadFile(item_data);
+                CreateItemFromFile(item_data);
+            }
         }
     }
 }
