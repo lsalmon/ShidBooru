@@ -1,6 +1,7 @@
 #include "BooruMenu.h"
 #include "ui_BooruMenu.h"
 #include "QSqlQueryHelper.h"
+#include <QSqlDriver>
 #include <QImageReader>
 #include <algorithm>
 #include <QMutexLocker>
@@ -18,9 +19,15 @@
 static QSqlDatabase db;
 static int key_pressed = Qt::Key_Clear;
 static QStandardItemModel model;
+static bool db_rollback_support = false;
 
 static void removeDb()
 {
+    // If transactions supported, cancel changes made to db when exiting
+    if(db_rollback_support)
+    {
+        db.rollback();
+    }
     db.close();
     QSqlDatabase::removeDatabase("qt_sql_default_connection");
     qDebug() << "DB removed";
@@ -53,6 +60,9 @@ void BooruMenu::BooruMenuUISetup(void)
         }
         if(item->text() == "Export to Booru File") {
             connect(item, &QAction::triggered, this, &BooruMenu::exportToBooruFile);
+        }
+        if(item->text() == "Save Changes to Booru File") {
+            connect(item, &QAction::triggered, this, &BooruMenu::saveChangesToBooruFile);
         }
     }
 
@@ -98,6 +108,14 @@ BooruMenu::BooruMenu(QWidget *parent, QStringList _files_or_db_path, BooruInitTy
             this->close();
             return ;
         }
+
+        // Disable save action
+        auto list_actions = ui->toolBar->actions();
+        foreach(QAction* item, list_actions){
+            if(item->text() == "Save Changes to Booru File") {
+                item->setEnabled(false);
+            }
+        }
     }
     else
     {
@@ -109,6 +127,25 @@ BooruMenu::BooruMenu(QWidget *parent, QStringList _files_or_db_path, BooruInitTy
             DisplayWarningMessage("Importing db failed with "+db.lastError().text());
             this->close();
             return ;
+        }
+
+        // Start transaction to cancel if not saved
+        // (if not supported, any changes will be saved to file)
+        db_rollback_support = db.driver()->hasFeature(QSqlDriver::Transactions);
+        if(!db_rollback_support)
+        {
+            DisplayWarningMessage("Transactions not supported, any changes made will be saved automatically to the SQL file");
+            // Disable save action
+            auto list_actions = ui->toolBar->actions();
+            foreach(QAction* item, list_actions){
+                if(item->text() == "Save Changes to Booru File") {
+                    item->setEnabled(false);
+                }
+            }
+        }
+        else
+        {
+            db.transaction();
         }
     }
 
@@ -599,6 +636,17 @@ void BooruMenu::exportToBooruFile(void)
     else
     {
         DisplayInfoMessage("Export cancelled by user");
+    }
+}
+
+void BooruMenu::saveChangesToBooruFile(void)
+{
+    if(db_rollback_support)
+    {
+        db.commit();
+        // Restart new transaction to either commit if saved
+        // or rollback if quit
+        db.transaction();
     }
 }
 

@@ -50,6 +50,7 @@ private slots:
     void resetSearchImage(void);
     void searchImageFinished(bool res);
     void exportToBooruFile(void);
+    void saveChangesToBooruFile(void);
 
 private:
     void BooruMenuUISetup(void);
