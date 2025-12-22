@@ -661,7 +661,7 @@ bool BooruMenu::CreateItemFromFile(BooruTypeItem &item_data)
         cv::Mat first_frame;
 
         capture >> first_frame;
-        item_data.thumbnail = QImage((uchar*) first_frame.data, first_frame.cols, first_frame.rows, first_frame.step, QImage::Format_RGB888);
+        item_data.thumbnail = QImage((uchar*) first_frame.data, first_frame.cols, first_frame.rows, first_frame.step, QImage::Format_RGB888).copy();
     }
 
     QFileInfo info(item_data.path);
